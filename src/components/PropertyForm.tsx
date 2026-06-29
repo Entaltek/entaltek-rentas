@@ -5,13 +5,19 @@ import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
 const MAX_LOCAL_IMAGES = 8;
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
+type ApiStatus = 'idle' | 'saving' | 'publishing' | 'saved' | 'published' | 'error';
+
 interface Props {
   property: Property;
   onChange: (property: Property) => void;
   onReset: () => void;
+  onSaveToBackend: () => void;
+  onPublish: () => void;
+  apiStatus: ApiStatus;
+  apiMessage: string;
 }
 
-export function PropertyForm({ property, onChange, onReset }: Props) {
+export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onPublish, apiStatus, apiMessage }: Props) {
   const [imageMessage, setImageMessage] = useState<string>('');
 
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
@@ -72,11 +78,14 @@ export function PropertyForm({ property, onChange, onReset }: Props) {
     updateField('images', property.images.filter((_, imageIndex) => imageIndex !== index));
   }
 
+  const isBusy = apiStatus === 'saving' || apiStatus === 'publishing';
+  const publicLink = property.slug ? `/r/${property.slug}` : '';
+
   return (
     <section className="form-section" id="crear">
       <p className="eyebrow">Editor en vivo</p>
       <h2>Captura la propiedad y mira la landing actualizarse</h2>
-      <p>Este flujo queda listo para conectarse al backend de Claude. Por ahora guarda el borrador en este navegador.</p>
+      <p>Guarda la propiedad en backend, publícala y genera un link público para compartir en Marketplace.</p>
 
       <form className="property-form">
         <label>
@@ -176,9 +185,17 @@ export function PropertyForm({ property, onChange, onReset }: Props) {
         </label>
 
         <div className="form-actions full">
-          <button type="button" className="primary-button" onClick={() => onChange(property)}>Guardar borrador local</button>
-          <button type="button" className="secondary-button" onClick={onReset}>Restaurar demo</button>
+          <button type="button" className="primary-button" onClick={onSaveToBackend} disabled={isBusy}>
+            {apiStatus === 'saving' ? 'Guardando...' : 'Guardar en backend'}
+          </button>
+          <button type="button" className="primary-button" onClick={onPublish} disabled={isBusy}>
+            {apiStatus === 'publishing' ? 'Publicando...' : 'Publicar y generar link'}
+          </button>
+          <button type="button" className="secondary-button" onClick={onReset} disabled={isBusy}>Restaurar demo</button>
         </div>
+
+        {apiMessage && <p className={`api-message full ${apiStatus === 'error' ? 'error' : 'success'}`}>{apiMessage}</p>}
+        {publicLink && <p className="api-message full success">Link público local: <strong>{publicLink}</strong></p>}
       </form>
     </section>
   );
