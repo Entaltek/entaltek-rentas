@@ -38,10 +38,12 @@ export function PropertyLanding({ property }: Props) {
 
       <section className="property-content">
         <div className="property-main">
-          <p className="eyebrow">{property.type} en renta</p>
-          <h1>{property.title}</h1>
-          <p className="location"><MapPin size={18} /> {property.zone}, {property.city}</p>
-          <p className="description">{property.description}</p>
+          <div className="property-title-card">
+            <p className="eyebrow">{property.type} en renta</p>
+            <h1>{property.title}</h1>
+            <p className="location"><MapPin size={18} /> {property.zone}, {property.city}</p>
+            <p className="description">{property.description}</p>
+          </div>
 
           <div className="feature-grid">
             <Feature icon={<Home size={18} />} label={`${property.bedrooms} recámaras`} />
