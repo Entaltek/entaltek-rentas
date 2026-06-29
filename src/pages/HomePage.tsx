@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Header } from '../components/Header';
+import { ListingQualityCard } from '../components/ListingQualityCard';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
@@ -42,6 +43,7 @@ export function HomePage() {
         </section>
 
         <PropertyForm property={property} onChange={setProperty} onReset={resetDraft} />
+        <ListingQualityCard property={property} />
         <PropertyLanding property={property} />
         <MarketplaceCopy property={property} />
       </main>
