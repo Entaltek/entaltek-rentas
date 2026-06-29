@@ -2,6 +2,17 @@ import type { Property, PropertyType } from '../types/property';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
 
+export interface ApiPropertyImage {
+  id?: string;
+  url?: string;
+  image_url?: string;
+  public_url?: string;
+  alt_text?: string | null;
+  sort_order?: number;
+  is_cover?: boolean;
+  created_at?: string;
+}
+
 export interface ApiProperty {
   id: string;
   slug: string | null;
@@ -21,16 +32,16 @@ export interface ApiProperty {
   deposit_months: number;
   minimum_stay_months?: number | null;
   available_from: string;
-  description: string;
-  requirements: string[];
-  amenities: string[];
+  description: string | null;
+  requirements: string[] | null;
+  amenities: string[] | null;
   contact_name: string;
   whatsapp: string;
   status: 'draft' | 'published' | 'archived';
   created_at: string;
   updated_at?: string;
   published_at?: string | null;
-  images: Array<{ url?: string; image_url?: string; public_url?: string }>;
+  images: ApiPropertyImage[];
 }
 
 export interface CreatePropertyPayload {
@@ -103,10 +114,10 @@ export function fromApiProperty(apiProperty: ApiProperty): Property {
     depositMonths: apiProperty.deposit_months,
     minimumStayMonths: apiProperty.minimum_stay_months ?? undefined,
     availableFrom: apiProperty.available_from,
-    description: apiProperty.description,
-    requirements: apiProperty.requirements,
-    amenities: apiProperty.amenities,
-    images: apiProperty.images.map((image) => image.url ?? image.image_url ?? image.public_url ?? '').filter(Boolean),
+    description: apiProperty.description ?? '',
+    requirements: apiProperty.requirements ?? [],
+    amenities: apiProperty.amenities ?? [],
+    images: apiProperty.images.map(getImageUrl).filter(Boolean),
     contactName: apiProperty.contact_name,
     whatsapp: apiProperty.whatsapp,
     createdAt: apiProperty.created_at
@@ -137,6 +148,32 @@ export async function getPropertyBySlug(slug: string): Promise<Property> {
   return parsePropertyResponse(response);
 }
 
+export async function uploadPropertyImages(propertyId: string, imageDataUrls: string[]): Promise<string[]> {
+  const uploadableImages = imageDataUrls.filter((image) => image.startsWith('data:image/'));
+
+  if (!uploadableImages.length) {
+    return [];
+  }
+
+  const formData = new FormData();
+  uploadableImages.forEach((image, index) => {
+    formData.append('files', dataUrlToFile(image, `property-image-${index + 1}`));
+  });
+
+  const response = await fetch(`${API_BASE_URL}/api/v1/properties/${propertyId}/images`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'No se pudieron subir las imágenes.');
+  }
+
+  const images = await response.json() as ApiPropertyImage[];
+  return images.map(getImageUrl).filter(Boolean);
+}
+
 async function parsePropertyResponse(response: Response): Promise<Property> {
   if (!response.ok) {
     const message = await response.text();
@@ -145,4 +182,27 @@ async function parsePropertyResponse(response: Response): Promise<Property> {
 
   const apiProperty = await response.json() as ApiProperty;
   return fromApiProperty(apiProperty);
+}
+
+function getImageUrl(image: ApiPropertyImage): string {
+  const rawUrl = image.url ?? image.image_url ?? image.public_url ?? '';
+
+  if (!rawUrl) return '';
+  if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) return rawUrl;
+
+  return `${API_BASE_URL}${rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`}`;
+}
+
+function dataUrlToFile(dataUrl: string, fallbackName: string): File {
+  const [metadata, base64] = dataUrl.split(',');
+  const mimeType = metadata.match(/data:(.*?);base64/)?.[1] ?? 'image/jpeg';
+  const extension = mimeType.split('/')[1] ?? 'jpg';
+  const binaryString = window.atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+
+  for (let index = 0; index < binaryString.length; index += 1) {
+    bytes[index] = binaryString.charCodeAt(index);
+  }
+
+  return new File([bytes], `${fallbackName}.${extension}`, { type: mimeType });
 }
