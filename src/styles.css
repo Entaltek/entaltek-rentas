@@ -44,6 +44,7 @@ main { width: min(1180px, 90vw); margin: 0 auto 80px; }
 .primary-button, .secondary-button { border: 0; border-radius: 999px; padding: 13px 20px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 .primary-button { background: var(--blue); color: white; box-shadow: 0 14px 35px rgba(1, 121, 177, .22); }
 .secondary-button { background: white; color: var(--navy); border: 1px solid rgba(1, 55, 98, .14); }
+.primary-button:disabled, .secondary-button:disabled { opacity: .55; cursor: not-allowed; }
 .intro-card { padding: 28px; background: var(--navy); color: white; border-radius: 28px; box-shadow: 0 30px 60px rgba(1, 55, 98, .2); }
 .intro-card p { color: rgba(255,255,255,.78); font-size: 16px; }
 
@@ -94,6 +95,9 @@ input[type="checkbox"] { accent-color: var(--blue); }
 .image-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .image-actions button { border: 0; border-radius: 999px; padding: 7px 9px; color: var(--tech); background: #eef8fb; font-weight: 800; cursor: pointer; }
 .image-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.api-message { margin: 0; padding: 14px 16px; border-radius: 18px; font-weight: 800; line-height: 1.5; }
+.api-message.success { color: var(--tech); background: rgba(71, 218, 214, .16); }
+.api-message.error { color: #8a1f11; background: rgba(255, 96, 72, .12); }
 
 .quality-card { background: linear-gradient(135deg, #ffffff 0%, #f3fbfe 55%, rgba(71, 218, 214, .13) 100%); }
 .quality-header { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 24px; align-items: center; }
