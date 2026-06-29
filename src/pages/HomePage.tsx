@@ -1,10 +1,24 @@
+import { useEffect, useState } from 'react';
 import { Header } from '../components/Header';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
 import { demoProperty } from '../data/demoProperty';
+import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib/propertyDraft';
+import type { Property } from '../types/property';
 
 export function HomePage() {
+  const [property, setProperty] = useState<Property>(() => loadPropertyDraft(demoProperty));
+
+  useEffect(() => {
+    savePropertyDraft(property);
+  }, [property]);
+
+  function resetDraft() {
+    clearPropertyDraft();
+    setProperty(demoProperty);
+  }
+
   return (
     <>
       <Header />
@@ -27,9 +41,9 @@ export function HomePage() {
           </div>
         </section>
 
-        <PropertyLanding property={demoProperty} />
-        <MarketplaceCopy property={demoProperty} />
-        <PropertyForm />
+        <PropertyForm property={property} onChange={setProperty} onReset={resetDraft} />
+        <PropertyLanding property={property} />
+        <MarketplaceCopy property={property} />
       </main>
     </>
   );
