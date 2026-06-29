@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { CalendarDays, Car, CheckCircle2, Home, MapPin, MessageCircle, PawPrint, Ruler } from 'lucide-react';
 import type { Property } from '../types/property';
 import { formatCurrency } from '../lib/format';
@@ -62,6 +63,6 @@ export function PropertyLanding({ property }: Props) {
   );
 }
 
-function Feature({ icon, label }: { icon: React.ReactNode; label: string }) {
+function Feature({ icon, label }: { icon: ReactNode; label: string }) {
   return <div className="feature">{icon}<span>{label}</span></div>;
 }
