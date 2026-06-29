@@ -58,6 +58,7 @@ main { width: min(1180px, 90vw); margin: 0 auto 80px; }
 .image-placeholder span { color: var(--muted); font-weight: 700; }
 .image-placeholder.compact { min-height: 100%; }
 .property-content { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 36px; padding: 34px; }
+.property-title-card { padding: 24px; border-radius: 26px; background: linear-gradient(180deg, #ffffff 0%, #f8fdff 100%); border: 1px solid rgba(1, 55, 98, .1); box-shadow: 0 16px 42px rgba(1, 55, 98, .07); }
 .property-main h1 { color: var(--navy); font-size: 42px; letter-spacing: -0.04em; margin: 6px 0 10px; }
 .location { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; }
 .description { color: var(--muted); line-height: 1.75; font-size: 17px; }
@@ -75,6 +76,7 @@ h2 { color: var(--navy); margin-top: 28px; }
 
 .copy-section, .form-section, .quality-card { padding: 34px; }
 .copy-section { display: grid; grid-template-columns: 0.8fr 1fr auto; gap: 20px; align-items: start; }
+.public-link-pill { display: inline-flex; align-items: center; margin-top: 14px; padding: 10px 13px; border-radius: 999px; background: rgba(71, 218, 214, .18); color: var(--tech); font-weight: 900; }
 textarea, input { width: 100%; border: 1px solid rgba(1, 55, 98, .14); border-radius: 18px; padding: 14px 16px; font: inherit; color: var(--text); background: #fbfdff; }
 input[type="checkbox"], input[type="file"] { width: auto; }
 input[type="checkbox"] { accent-color: var(--blue); }
