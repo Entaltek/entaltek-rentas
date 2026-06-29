@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createProperty, publishProperty } from '../api/properties';
+import { createProperty, publishProperty, uploadPropertyImages } from '../api/properties';
 import { Header } from '../components/Header';
 import { ListingQualityCard } from '../components/ListingQualityCard';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
@@ -32,7 +32,18 @@ export function HomePage() {
     setApiMessage('Guardando propiedad en backend...');
 
     try {
+      const localImages = property.images.filter((image) => image.startsWith('data:image/'));
       const savedProperty = await createProperty(property);
+
+      if (localImages.length) {
+        setApiMessage(`Propiedad guardada. Subiendo ${localImages.length} foto${localImages.length === 1 ? '' : 's'}...`);
+        const uploadedImageUrls = await uploadPropertyImages(savedProperty.id, localImages);
+        setProperty({ ...savedProperty, images: uploadedImageUrls });
+        setApiStatus('saved');
+        setApiMessage(`Propiedad guardada con ${uploadedImageUrls.length} foto${uploadedImageUrls.length === 1 ? '' : 's'} en backend. Ya puedes publicarla.`);
+        return;
+      }
+
       setProperty(savedProperty);
       setApiStatus('saved');
       setApiMessage('Propiedad guardada en backend. Ya puedes publicarla para generar el link.');
