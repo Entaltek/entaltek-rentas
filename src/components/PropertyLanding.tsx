@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CalendarDays, Car, CheckCircle2, Home, MapPin, MessageCircle, PawPrint, Ruler } from 'lucide-react';
+import { CalendarDays, Camera, Car, CheckCircle2, Home, MapPin, MessageCircle, PawPrint, Ruler } from 'lucide-react';
 import type { Property } from '../types/property';
 import { formatCurrency } from '../lib/format';
 
@@ -9,15 +9,30 @@ interface Props {
 
 export function PropertyLanding({ property }: Props) {
   const whatsappUrl = `https://wa.me/${property.whatsapp}?text=${encodeURIComponent(`Hola, vi la propiedad: ${property.title}. ¿Sigue disponible?`)}`;
+  const [coverImage, ...galleryImages] = property.images.filter(Boolean);
 
   return (
     <article className="property-card" id="demo">
-      <section className="hero-grid">
-        <img src={property.images[0]} alt={property.title} className="hero-image" />
+      <section className={`hero-grid ${coverImage ? '' : 'empty-gallery'}`}>
+        {coverImage ? (
+          <img src={coverImage} alt={property.title} className="hero-image" />
+        ) : (
+          <div className="image-placeholder hero-image">
+            <Camera size={34} />
+            <strong>Fotos pendientes</strong>
+            <span>Cuando se suban imágenes al backend, aparecerán aquí.</span>
+          </div>
+        )}
         <div className="gallery-column">
-          {property.images.slice(1, 3).map((image) => (
+          {galleryImages.slice(0, 2).map((image) => (
             <img key={image} src={image} alt="Foto de la propiedad" />
           ))}
+          {!galleryImages.length && coverImage && (
+            <div className="image-placeholder compact">
+              <Camera size={24} />
+              <span>Agrega más fotos para completar la galería.</span>
+            </div>
+          )}
         </div>
       </section>
 
