@@ -1,1 +1,0 @@
-{"root":["./src/main.tsx","./src/vite-env.d.ts","./src/components/Header.tsx","./src/components/MarketplaceCopy.tsx","./src/components/PropertyForm.tsx","./src/components/PropertyLanding.tsx","./src/data/demoProperty.ts","./src/lib/draft.ts","./src/lib/format.ts","./src/lib/marketplaceCopy.ts","./src/pages/HomePage.tsx","./src/types/property.ts"],"version":"6.0.3"}

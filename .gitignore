@@ -1,8 +1,5 @@
 node_modules/
 dist/
-.env
-.env.local
+*.tsbuildinfo
+*.local
 .DS_Store
-.vscode/
-.idea/
-coverage/
