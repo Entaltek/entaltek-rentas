@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bath, BedDouble, CalendarDays, Car, CheckCircle2, MapPin, MessageCircle, PawPrint, Ruler, Sofa } from 'lucide-react';
+import { Bath, BedDouble, CalendarDays, Camera, Car, CheckCircle2, MapPin, MessageCircle, PawPrint, Ruler, Sofa } from 'lucide-react';
 import type { Property } from '../types/property';
 import { formatCurrency } from '../lib/format';
 
@@ -11,26 +11,41 @@ interface Props {
 export function PropertyLanding({ property, sectionId }: Props) {
   const whatsappUrl = `https://wa.me/${property.whatsapp}?text=${encodeURIComponent(`Hola, vi la propiedad: ${property.title}. ¿Sigue disponible?`)}`;
   const hasWhatsapp = property.whatsapp.length >= 10;
+  const [coverImage, ...galleryImages] = property.images.filter(Boolean);
 
   return (
     <article className="property-card" id={sectionId}>
-      <section className="hero-grid">
-        <img src={property.images[0]} alt={`Foto principal: ${property.title}`} className="hero-image" />
-        {property.images.length > 1 && (
-          <div className="gallery-column">
-            {property.images.slice(1, 3).map((image, index) => (
-              <img key={image} src={image} alt={`Foto ${index + 2} de ${property.title}`} loading="lazy" />
-            ))}
+      <section className={`hero-grid ${coverImage ? '' : 'empty-gallery'}`}>
+        {coverImage ? (
+          <img src={coverImage} alt={`Foto principal: ${property.title}`} className="hero-image" />
+        ) : (
+          <div className="image-placeholder hero-image">
+            <Camera size={34} />
+            <strong>Fotos pendientes</strong>
+            <span>Cuando se suban imágenes al backend, aparecerán aquí.</span>
           </div>
         )}
+        <div className="gallery-column">
+          {galleryImages.slice(0, 2).map((image, index) => (
+            <img key={image} src={image} alt={`Foto ${index + 2} de ${property.title}`} loading="lazy" />
+          ))}
+          {!galleryImages.length && coverImage && (
+            <div className="image-placeholder compact">
+              <Camera size={24} />
+              <span>Agrega más fotos para completar la galería.</span>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="property-content">
         <div className="property-main">
-          <p className="eyebrow">{property.type} en renta</p>
-          <h1>{property.title}</h1>
-          <p className="location"><MapPin size={18} /> {property.zone}, {property.city}</p>
-          <p className="description">{property.description}</p>
+          <div className="property-title-card">
+            <p className="eyebrow">{property.type} en renta</p>
+            <h1>{property.title}</h1>
+            <p className="location"><MapPin size={18} /> {property.zone}, {property.city}</p>
+            <p className="description">{property.description}</p>
+          </div>
 
           <div className="feature-grid">
             <Feature icon={<BedDouble size={18} />} label={`${property.bedrooms} recámara${property.bedrooms === 1 ? '' : 's'}`} />

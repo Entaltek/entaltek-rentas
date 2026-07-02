@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Copy, MessageCircle } from 'lucide-react';
 import type { Property } from '../types/property';
 import { generateMarketplaceCopy } from '../lib/marketplaceCopy';
@@ -11,9 +11,13 @@ interface Props {
 type CopyStatus = 'idle' | 'copied' | 'error';
 
 export function MarketplaceCopy({ property, sectionId }: Props) {
-  const copy = generateMarketplaceCopy(property);
   const [status, setStatus] = useState<CopyStatus>('idle');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const publicUrl = useMemo(() => {
+    if (!property.slug) return '';
+    return `${window.location.origin}/r/${property.slug}`;
+  }, [property.slug]);
+  const copy = generateMarketplaceCopy(property, { publicUrl });
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(copy)}`;
 
   useEffect(() => {
@@ -36,12 +40,17 @@ export function MarketplaceCopy({ property, sectionId }: Props) {
     <section className="copy-section" id={sectionId}>
       <div>
         <p className="eyebrow">Texto listo para publicar</p>
-        <h2>Copy para Facebook Marketplace</h2>
+        <h2>Copy para Marketplace y grupos</h2>
         <p className="section-note">
-          Úsalo en Marketplace, grupos de Facebook o WhatsApp. El link de la landing se agrega al final cuando la propiedad tenga URL pública.
+          Publica este texto en Facebook Marketplace, grupos de renta o WhatsApp. Cuando la propiedad ya tenga slug, agregamos el link completo automáticamente.
         </p>
+        {publicUrl && (
+          <a href={publicUrl} target="_blank" rel="noreferrer" className="public-link-pill">
+            Abrir landing pública
+          </a>
+        )}
       </div>
-      <textarea ref={textareaRef} readOnly value={copy} aria-label="Texto generado para Marketplace" />
+      <textarea ref={textareaRef} readOnly value={copy} aria-label="Copy para publicación" />
       <div className="copy-actions">
         <button onClick={copyToClipboard} className="secondary-button" type="button">
           {status === 'copied' ? <Check size={18} /> : <Copy size={18} />}

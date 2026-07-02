@@ -1,9 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { PropertyDraft } from '../lib/draft';
-import { clearDraft, draftToProperty, emptyDraft, isDraftPresentable, loadDraft, saveDraft } from '../lib/draft';
-import type { PropertyType } from '../types/property';
-import { MarketplaceCopy } from './MarketplaceCopy';
-import { PropertyLanding } from './PropertyLanding';
+import { useState, type ChangeEvent } from 'react';
+import type { Property, PropertyType } from '../types/property';
+import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
 
 const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
   { value: 'departamento', label: 'Departamento' },
@@ -13,181 +10,222 @@ const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
   { value: 'oficina', label: 'Oficina' }
 ];
 
-export function PropertyForm() {
-  const [draft, setDraft] = useState<PropertyDraft>(() => loadDraft() ?? emptyDraft);
-  const [showPreview, setShowPreview] = useState(false);
+const MAX_LOCAL_IMAGES = 8;
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
 
-  useEffect(() => {
-    saveDraft(draft);
-  }, [draft]);
+type ApiStatus = 'idle' | 'saving' | 'publishing' | 'saved' | 'published' | 'error';
 
-  const presentable = isDraftPresentable(draft);
-  const previewProperty = useMemo(
-    () => (presentable ? draftToProperty(draft) : null),
-    [draft, presentable]
-  );
+interface Props {
+  property: Property;
+  onChange: (property: Property) => void;
+  onReset: () => void;
+  onSaveToBackend: () => void;
+  onPublish: () => void;
+  apiStatus: ApiStatus;
+  apiMessage: string;
+}
 
-  function set<K extends keyof PropertyDraft>(key: K, value: PropertyDraft[K]) {
-    setDraft((current) => ({ ...current, [key]: value }));
+export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onPublish, apiStatus, apiMessage }: Props) {
+  const [imageMessage, setImageMessage] = useState<string>('');
+
+  function updateField<K extends keyof Property>(key: K, value: Property[K]) {
+    onChange({ ...property, [key]: value });
   }
 
-  function handleClear() {
-    clearDraft();
-    setDraft(emptyDraft);
-    setShowPreview(false);
+  function handleText(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, key: keyof Property) {
+    updateField(key, event.target.value as never);
   }
+
+  function handleNumber(event: ChangeEvent<HTMLInputElement>, key: keyof Property) {
+    updateField(key, safeNumber(event.target.value) as never);
+  }
+
+  async function handleImages(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    event.target.value = '';
+
+    if (!selectedFiles.length) return;
+
+    const remainingSlots = MAX_LOCAL_IMAGES - property.images.length;
+    if (remainingSlots <= 0) {
+      setImageMessage(`Solo puedes tener ${MAX_LOCAL_IMAGES} fotos en el borrador local.`);
+      return;
+    }
+
+    const validFiles = selectedFiles
+      .filter((file) => file.type.startsWith('image/'))
+      .filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES)
+      .slice(0, remainingSlots);
+
+    if (!validFiles.length) {
+      setImageMessage('No se agregaron fotos. Usa imágenes JPG, PNG o WebP menores a 2 MB.');
+      return;
+    }
+
+    const dataUrls = await Promise.all(validFiles.map(readFileAsDataUrl));
+    updateField('images', [...property.images, ...dataUrls]);
+    setImageMessage(`${validFiles.length} foto${validFiles.length === 1 ? '' : 's'} agregada${validFiles.length === 1 ? '' : 's'} al borrador.`);
+  }
+
+  function setCoverImage(index: number) {
+    const images = [...property.images];
+    const [selected] = images.splice(index, 1);
+    updateField('images', [selected, ...images]);
+  }
+
+  function moveImage(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= property.images.length) return;
+
+    const images = [...property.images];
+    [images[index], images[targetIndex]] = [images[targetIndex], images[index]];
+    updateField('images', images);
+  }
+
+  function removeImage(index: number) {
+    updateField('images', property.images.filter((_, imageIndex) => imageIndex !== index));
+  }
+
+  const isBusy = apiStatus === 'saving' || apiStatus === 'publishing';
+  const publicLink = property.slug ? `/r/${property.slug}` : '';
 
   return (
-    <>
-      <section className="form-section" id="crear">
-        <p className="eyebrow">Crea tu propiedad</p>
-        <h2>Captura los datos y mira la landing al instante</h2>
-        <p className="section-note">
-          El borrador se guarda automáticamente en este navegador. Llena título y renta mensual para activar la vista previa.
-        </p>
-        <form className="property-form" onSubmit={(event) => event.preventDefault()}>
-          <label>
-            Título de la propiedad
-            <input
-              value={draft.title}
-              onChange={(e) => set('title', e.target.value)}
-              placeholder="Departamento amueblado en zona norte"
-            />
-          </label>
-          <label>
-            Tipo
-            <select value={draft.type} onChange={(e) => set('type', e.target.value as PropertyType)}>
-              {PROPERTY_TYPES.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Renta mensual (MXN)
-            <input
-              value={draft.price}
-              onChange={(e) => set('price', e.target.value)}
-              placeholder="12000"
-              inputMode="numeric"
-            />
-          </label>
-          <label>
-            WhatsApp de contacto
-            <input
-              value={draft.whatsapp}
-              onChange={(e) => set('whatsapp', e.target.value)}
-              placeholder="524771234567"
-              inputMode="tel"
-            />
-          </label>
-          <label>
-            Zona / colonia
-            <input value={draft.zone} onChange={(e) => set('zone', e.target.value)} placeholder="Zona norte" />
-          </label>
-          <label>
-            Ciudad
-            <input value={draft.city} onChange={(e) => set('city', e.target.value)} placeholder="León, Guanajuato" />
-          </label>
-          <label>
-            Recámaras
-            <input value={draft.bedrooms} onChange={(e) => set('bedrooms', e.target.value)} inputMode="numeric" />
-          </label>
-          <label>
-            Baños
-            <input value={draft.bathrooms} onChange={(e) => set('bathrooms', e.target.value)} inputMode="numeric" />
-          </label>
-          <label>
-            Estacionamientos
-            <input value={draft.parkingSpots} onChange={(e) => set('parkingSpots', e.target.value)} inputMode="numeric" />
-          </label>
-          <label>
-            Superficie (m², opcional)
-            <input value={draft.areaM2} onChange={(e) => set('areaM2', e.target.value)} inputMode="numeric" placeholder="78" />
-          </label>
-          <label>
-            Meses de depósito
-            <input value={draft.depositMonths} onChange={(e) => set('depositMonths', e.target.value)} inputMode="numeric" />
-          </label>
-          <label>
-            Disponible desde
-            <input value={draft.availableFrom} onChange={(e) => set('availableFrom', e.target.value)} placeholder="Inmediata" />
-          </label>
-          <fieldset className="full option-row">
-            <legend>Condiciones</legend>
-            <label className="option">
-              <input type="checkbox" checked={draft.furnished} onChange={(e) => set('furnished', e.target.checked)} />
-              Amueblado
-            </label>
-            <label className="option">
-              <input type="checkbox" checked={draft.petsAllowed} onChange={(e) => set('petsAllowed', e.target.checked)} />
-              Acepta mascotas
-            </label>
-            <label className="option">
-              <input
-                type="checkbox"
-                checked={draft.maintenanceIncluded}
-                onChange={(e) => set('maintenanceIncluded', e.target.checked)}
-              />
-              Mantenimiento incluido
-            </label>
-          </fieldset>
-          <label className="full">
-            Descripción
-            <textarea
-              value={draft.description}
-              onChange={(e) => set('description', e.target.value)}
-              placeholder="Describe la propiedad, ventajas, reglas y disponibilidad."
-            />
-          </label>
-          <label>
-            Requisitos (uno por línea)
-            <textarea
-              value={draft.requirements}
-              onChange={(e) => set('requirements', e.target.value)}
-              placeholder={'Identificación oficial\nComprobante de ingresos'}
-            />
-          </label>
-          <label>
-            Amenidades (una por línea)
-            <textarea
-              value={draft.amenities}
-              onChange={(e) => set('amenities', e.target.value)}
-              placeholder={'Cocina equipada\nCloset\nZona tranquila'}
-            />
-          </label>
-          <label className="full">
-            Fotos (URLs, una por línea)
-            <textarea
-              value={draft.imageUrls}
-              onChange={(e) => set('imageUrls', e.target.value)}
-              placeholder="https://…"
-            />
-          </label>
-          <div className="full form-actions">
-            <button
-              type="button"
-              className="primary-button"
-              disabled={!presentable}
-              onClick={() => setShowPreview(true)}
-            >
-              {showPreview ? 'Vista previa activa' : 'Ver vista previa'}
-            </button>
-            <button type="button" className="secondary-button" onClick={handleClear}>
-              Limpiar borrador
-            </button>
-            {!presentable && <span className="form-hint">Falta título o renta mensual válida.</span>}
-          </div>
-        </form>
-      </section>
+    <section className="form-section" id="crear">
+      <p className="eyebrow">Editor en vivo</p>
+      <h2>Captura la propiedad y mira la landing actualizarse</h2>
+      <p>Guarda la propiedad en backend, publícala y genera un link público para compartir en Marketplace.</p>
 
-      {showPreview && previewProperty && (
-        <section className="preview-block" aria-label="Vista previa de tu landing">
-          <p className="eyebrow">Vista previa</p>
-          <h2>Así se verá tu landing</h2>
-          <PropertyLanding property={previewProperty} />
-          <MarketplaceCopy property={previewProperty} />
-        </section>
-      )}
-    </>
+      <form className="property-form">
+        <label>
+          Título de la propiedad
+          <input value={property.title} onChange={(event) => handleText(event, 'title')} />
+        </label>
+        <label>
+          Tipo
+          <select value={property.type} onChange={(event) => updateField('type', event.target.value as PropertyType)}>
+            {PROPERTY_TYPES.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Renta mensual
+          <input value={property.price} inputMode="numeric" onChange={(event) => handleNumber(event, 'price')} />
+        </label>
+        <label>
+          Zona / colonia
+          <input value={property.zone} onChange={(event) => handleText(event, 'zone')} />
+        </label>
+        <label>
+          Ciudad
+          <input value={property.city} onChange={(event) => handleText(event, 'city')} />
+        </label>
+        <label>
+          Recámaras
+          <input value={property.bedrooms} inputMode="numeric" onChange={(event) => handleNumber(event, 'bedrooms')} />
+        </label>
+        <label>
+          Baños
+          <input value={property.bathrooms} inputMode="numeric" onChange={(event) => handleNumber(event, 'bathrooms')} />
+        </label>
+        <label>
+          Estacionamientos
+          <input value={property.parkingSpots} inputMode="numeric" onChange={(event) => handleNumber(event, 'parkingSpots')} />
+        </label>
+        <label>
+          Metros cuadrados
+          <input value={property.areaM2 ?? ''} inputMode="numeric" onChange={(event) => updateField('areaM2', safeNumber(event.target.value))} />
+        </label>
+        <label>
+          Meses de depósito
+          <input value={property.depositMonths} inputMode="numeric" onChange={(event) => handleNumber(event, 'depositMonths')} />
+        </label>
+        <label>
+          Disponible desde
+          <input value={property.availableFrom} onChange={(event) => handleText(event, 'availableFrom')} />
+        </label>
+        <label>
+          WhatsApp de contacto
+          <input value={property.whatsapp} onChange={(event) => handleText(event, 'whatsapp')} />
+        </label>
+
+        <div className="toggle-row full">
+          <label className="toggle-label">
+            <input type="checkbox" checked={property.furnished} onChange={(event) => updateField('furnished', event.target.checked)} />
+            Amueblado
+          </label>
+          <label className="toggle-label">
+            <input type="checkbox" checked={property.petsAllowed} onChange={(event) => updateField('petsAllowed', event.target.checked)} />
+            Acepta mascotas
+          </label>
+          <label className="toggle-label">
+            <input type="checkbox" checked={property.maintenanceIncluded} onChange={(event) => updateField('maintenanceIncluded', event.target.checked)} />
+            Mantenimiento incluido
+          </label>
+        </div>
+
+        <div className="image-uploader full">
+          <div>
+            <p className="field-title">Fotos de la propiedad</p>
+            <p className="field-help">Agrega hasta {MAX_LOCAL_IMAGES} fotos. La primera imagen será la portada de la landing.</p>
+          </div>
+          <label className="upload-box">
+            <input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={handleImages} />
+            <span>Subir fotos</span>
+            <small>JPG, PNG o WebP · máximo 2 MB por imagen</small>
+          </label>
+          {imageMessage && <p className="form-note">{imageMessage}</p>}
+          <div className="image-editor-grid">
+            {property.images.map((image, index) => (
+              <div className="image-editor-card" key={`${image}-${index}`}>
+                <img src={image} alt={`Foto ${index + 1} de la propiedad`} />
+                <span>{index === 0 ? 'Portada' : `Foto ${index + 1}`}</span>
+                <div className="image-actions">
+                  <button type="button" onClick={() => setCoverImage(index)} disabled={index === 0}>Portada</button>
+                  <button type="button" onClick={() => moveImage(index, -1)} disabled={index === 0}>←</button>
+                  <button type="button" onClick={() => moveImage(index, 1)} disabled={index === property.images.length - 1}>→</button>
+                  <button type="button" onClick={() => removeImage(index)}>Quitar</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <label className="full">
+          Descripción
+          <textarea value={property.description} onChange={(event) => handleText(event, 'description')} />
+        </label>
+        <label className="full">
+          Amenidades, una por línea
+          <textarea value={textFromList(property.amenities)} onChange={(event) => updateField('amenities', listFromText(event.target.value))} />
+        </label>
+        <label className="full">
+          Requisitos, uno por línea
+          <textarea value={textFromList(property.requirements)} onChange={(event) => updateField('requirements', listFromText(event.target.value))} />
+        </label>
+
+        <div className="form-actions full">
+          <button type="button" className="primary-button" onClick={onSaveToBackend} disabled={isBusy}>
+            {apiStatus === 'saving' ? 'Guardando...' : 'Guardar en backend'}
+          </button>
+          <button type="button" className="primary-button" onClick={onPublish} disabled={isBusy}>
+            {apiStatus === 'publishing' ? 'Publicando...' : 'Publicar y generar link'}
+          </button>
+          <button type="button" className="secondary-button" onClick={onReset} disabled={isBusy}>Restaurar demo</button>
+        </div>
+
+        {apiMessage && <p className={`api-message full ${apiStatus === 'error' ? 'error' : 'success'}`}>{apiMessage}</p>}
+        {publicLink && <p className="api-message full success">Link público local: <strong>{publicLink}</strong></p>}
+      </form>
+    </section>
   );
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }

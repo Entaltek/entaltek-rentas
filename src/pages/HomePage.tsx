@@ -1,10 +1,79 @@
+import { useEffect, useState } from 'react';
+import { createProperty, publishProperty, uploadPropertyImages } from '../api/properties';
 import { Header } from '../components/Header';
+import { ListingQualityCard } from '../components/ListingQualityCard';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
 import { demoProperty } from '../data/demoProperty';
+import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib/propertyDraft';
+import type { Property } from '../types/property';
+
+type ApiStatus = 'idle' | 'saving' | 'publishing' | 'saved' | 'published' | 'error';
 
 export function HomePage() {
+  const [property, setProperty] = useState<Property>(() => loadPropertyDraft(demoProperty));
+  const [apiStatus, setApiStatus] = useState<ApiStatus>('idle');
+  const [apiMessage, setApiMessage] = useState('');
+
+  useEffect(() => {
+    savePropertyDraft(property);
+  }, [property]);
+
+  function resetDraft() {
+    clearPropertyDraft();
+    setProperty(demoProperty);
+    setApiStatus('idle');
+    setApiMessage('');
+  }
+
+  async function handleSaveToBackend() {
+    setApiStatus('saving');
+    setApiMessage('Guardando propiedad en backend...');
+
+    try {
+      const localImages = property.images.filter((image) => image.startsWith('data:image/'));
+      const savedProperty = await createProperty(property);
+
+      if (localImages.length) {
+        setApiMessage(`Propiedad guardada. Subiendo ${localImages.length} foto${localImages.length === 1 ? '' : 's'}...`);
+        const uploadedImageUrls = await uploadPropertyImages(savedProperty.id, localImages);
+        setProperty({ ...savedProperty, images: uploadedImageUrls });
+        setApiStatus('saved');
+        setApiMessage(`Propiedad guardada con ${uploadedImageUrls.length} foto${uploadedImageUrls.length === 1 ? '' : 's'} en backend. Ya puedes publicarla.`);
+        return;
+      }
+
+      setProperty(savedProperty);
+      setApiStatus('saved');
+      setApiMessage('Propiedad guardada en backend. Ya puedes publicarla para generar el link.');
+    } catch (error) {
+      setApiStatus('error');
+      setApiMessage(error instanceof Error ? error.message : 'No se pudo guardar la propiedad.');
+    }
+  }
+
+  async function handlePublish() {
+    if (!property.id || property.id.startsWith('demo-')) {
+      setApiStatus('error');
+      setApiMessage('Primero guarda la propiedad en backend antes de publicarla.');
+      return;
+    }
+
+    setApiStatus('publishing');
+    setApiMessage('Publicando propiedad y generando link...');
+
+    try {
+      const publishedProperty = await publishProperty(property.id);
+      setProperty(publishedProperty);
+      setApiStatus('published');
+      setApiMessage(`Link generado: /r/${publishedProperty.slug}`);
+    } catch (error) {
+      setApiStatus('error');
+      setApiMessage(error instanceof Error ? error.message : 'No se pudo publicar la propiedad.');
+    }
+  }
+
   return (
     <>
       <Header />
@@ -27,9 +96,18 @@ export function HomePage() {
           </div>
         </section>
 
-        <PropertyLanding property={demoProperty} sectionId="demo" />
-        <MarketplaceCopy property={demoProperty} sectionId="copy" />
-        <PropertyForm />
+        <PropertyForm
+          property={property}
+          onChange={setProperty}
+          onReset={resetDraft}
+          onSaveToBackend={handleSaveToBackend}
+          onPublish={handlePublish}
+          apiStatus={apiStatus}
+          apiMessage={apiMessage}
+        />
+        <ListingQualityCard property={property} />
+        <PropertyLanding property={property} sectionId="demo" />
+        <MarketplaceCopy property={property} sectionId="copy" />
       </main>
       <footer className="site-footer">
         <p><strong>Entaltek Rentas</strong> · Mini landings para rentar más rápido.</p>
