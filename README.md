@@ -9,8 +9,9 @@ Facebook Marketplace da visibilidad, pero limita la presentación. Este producto
 ## MVP incluido
 
 - Landing pública de ejemplo para una propiedad.
-- Formulario base para capturar datos de una propiedad.
-- Generador de texto para Marketplace.
+- Formulario completo con vista previa en vivo de la landing.
+- Borrador guardado automáticamente en el navegador (localStorage).
+- Generador de texto para Marketplace, con copiado y compartir por WhatsApp.
 - Diseño responsive con identidad visual inspirada en Entaltek.
 - Documentación inicial de producto, roadmap y decisiones.
 

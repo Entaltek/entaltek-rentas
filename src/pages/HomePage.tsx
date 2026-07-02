@@ -27,10 +27,17 @@ export function HomePage() {
           </div>
         </section>
 
-        <PropertyLanding property={demoProperty} />
-        <MarketplaceCopy property={demoProperty} />
+        <PropertyLanding property={demoProperty} sectionId="demo" />
+        <MarketplaceCopy property={demoProperty} sectionId="copy" />
         <PropertyForm />
       </main>
+      <footer className="site-footer">
+        <p><strong>Entaltek Rentas</strong> · Mini landings para rentar más rápido.</p>
+        <p>
+          La información de cada propiedad es responsabilidad del anunciante. Verifica el inmueble en persona
+          antes de entregar depósitos o firmar contratos.
+        </p>
+      </footer>
     </>
   );
 }
