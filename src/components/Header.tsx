@@ -10,7 +10,7 @@ export function Header() {
           <span>Mini landings para publicar mejor</span>
         </div>
       </div>
-      <nav>
+      <nav aria-label="Secciones del sitio">
         <a href="#demo">Demo</a>
         <a href="#copy">Copy</a>
         <a href="#crear">Crear propiedad</a>

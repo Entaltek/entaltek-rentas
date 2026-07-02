@@ -106,9 +106,16 @@ export function HomePage() {
           apiMessage={apiMessage}
         />
         <ListingQualityCard property={property} />
-        <PropertyLanding property={property} />
-        <MarketplaceCopy property={property} />
+        <PropertyLanding property={property} sectionId="demo" />
+        <MarketplaceCopy property={property} sectionId="copy" />
       </main>
+      <footer className="site-footer">
+        <p><strong>Entaltek Rentas</strong> · Mini landings para rentar más rápido.</p>
+        <p>
+          La información de cada propiedad es responsabilidad del anunciante. Verifica el inmueble en persona
+          antes de entregar depósitos o firmar contratos.
+        </p>
+      </footer>
     </>
   );
 }

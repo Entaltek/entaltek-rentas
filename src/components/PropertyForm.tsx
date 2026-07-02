@@ -1,6 +1,14 @@
 import { useState, type ChangeEvent } from 'react';
-import type { Property } from '../types/property';
+import type { Property, PropertyType } from '../types/property';
 import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
+
+const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
+  { value: 'departamento', label: 'Departamento' },
+  { value: 'casa', label: 'Casa' },
+  { value: 'cuarto', label: 'Cuarto' },
+  { value: 'local', label: 'Local comercial' },
+  { value: 'oficina', label: 'Oficina' }
+];
 
 const MAX_LOCAL_IMAGES = 8;
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
@@ -93,6 +101,14 @@ export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onP
           <input value={property.title} onChange={(event) => handleText(event, 'title')} />
         </label>
         <label>
+          Tipo
+          <select value={property.type} onChange={(event) => updateField('type', event.target.value as PropertyType)}>
+            {PROPERTY_TYPES.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+        <label>
           Renta mensual
           <input value={property.price} inputMode="numeric" onChange={(event) => handleNumber(event, 'price')} />
         </label>
@@ -119,6 +135,10 @@ export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onP
         <label>
           Metros cuadrados
           <input value={property.areaM2 ?? ''} inputMode="numeric" onChange={(event) => updateField('areaM2', safeNumber(event.target.value))} />
+        </label>
+        <label>
+          Meses de depósito
+          <input value={property.depositMonths} inputMode="numeric" onChange={(event) => handleNumber(event, 'depositMonths')} />
         </label>
         <label>
           Disponible desde
