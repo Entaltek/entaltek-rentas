@@ -17,7 +17,6 @@ export function Header({ variant = 'app' }: Props) {
       {variant === 'app' && (
         <nav aria-label="Secciones del sitio">
           <a href="/#ejemplo">Ver ejemplo</a>
-          <a href="/crear#copy">Copy</a>
           <a href="/crear" className="nav-cta">Crear propiedad</a>
         </nav>
       )}
