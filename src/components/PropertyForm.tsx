@@ -8,6 +8,7 @@ import type {
   PropertyType
 } from '../types/property';
 import { OPERATION_TYPE_LABELS, PROPERTY_TYPE_LABELS } from '../types/property';
+import { hasValidWhatsapp } from '../lib/format';
 import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
 import { NearbyPlacesEditor } from './NearbyPlacesEditor';
 import { PhotoManager } from './PhotoManager';
@@ -43,10 +44,13 @@ export function PropertyForm({ property, onChange }: Props) {
     updateField(key, event.target.value as never);
   }
 
+  // Marca visual de campo completo: palomita verde dentro del input.
+  const ok = (valid: boolean) => (valid ? 'is-valid' : '');
+
   return (
     <form className="property-form" onSubmit={(event) => event.preventDefault()}>
       <FormSection icon={<Home size={18} />} title="Información principal" subtitle="Lo primero que verá un interesado.">
-        <label className="full">
+        <label className={`full ${ok(property.title.trim().length >= 5)}`}>
           Título de la propiedad
           <input
             value={property.title}
@@ -70,7 +74,7 @@ export function PropertyForm({ property, onChange }: Props) {
             ))}
           </select>
         </label>
-        <label className="full">
+        <label className={`full ${ok(property.description.trim().length >= 30)}`}>
           Descripción
           <textarea
             value={property.description}
@@ -81,7 +85,7 @@ export function PropertyForm({ property, onChange }: Props) {
       </FormSection>
 
       <FormSection icon={<Wallet size={18} />} title="Precio y condiciones" subtitle="Un precio claro filtra mejor a los interesados.">
-        <label>
+        <label className={ok(property.price > 0)}>
           Precio
           <input
             value={property.price || ''}
@@ -105,15 +109,15 @@ export function PropertyForm({ property, onChange }: Props) {
             ))}
           </select>
         </label>
-        <label>
+        <label className={ok(property.availableFrom.trim().length > 0)}>
           Disponible desde
           <input value={property.availableFrom} placeholder="Inmediata, 1 de agosto..." onChange={(event) => handleText(event, 'availableFrom')} />
         </label>
-        <label>
+        <label className={ok(property.depositText.trim().length > 0)}>
           Depósito
           <input value={property.depositText} placeholder="Ej. 1 mes de depósito" onChange={(event) => handleText(event, 'depositText')} />
         </label>
-        <label>
+        <label className={ok(property.minimumContractText.trim().length > 0)}>
           Contrato mínimo
           <input value={property.minimumContractText} placeholder="Ej. Contrato mínimo de 12 meses" onChange={(event) => handleText(event, 'minimumContractText')} />
         </label>
@@ -123,7 +127,7 @@ export function PropertyForm({ property, onChange }: Props) {
             Mantenimiento incluido
           </label>
         </div>
-        <label className="full">
+        <label className={`full ${ok(property.servicesIncluded.length > 0)}`}>
           Servicios incluidos, uno por línea
           <textarea
             value={textFromList(property.servicesIncluded)}
@@ -134,19 +138,19 @@ export function PropertyForm({ property, onChange }: Props) {
       </FormSection>
 
       <FormSection icon={<MapPin size={18} />} title="Ubicación" subtitle="Tú decides cuánto detalle mostrar públicamente.">
-        <label>
+        <label className={ok(property.location.city.trim().length > 0)}>
           Ciudad
           <input value={property.location.city} placeholder="León" onChange={(event) => updateLocation('city', event.target.value)} />
         </label>
-        <label>
+        <label className={ok(property.location.state.trim().length > 0)}>
           Estado
           <input value={property.location.state} placeholder="Guanajuato" onChange={(event) => updateLocation('state', event.target.value)} />
         </label>
-        <label>
+        <label className={ok(property.location.neighborhood.trim().length > 0)}>
           Colonia / zona
           <input value={property.location.neighborhood} placeholder="Zona norte" onChange={(event) => updateLocation('neighborhood', event.target.value)} />
         </label>
-        <label>
+        <label className={ok(property.location.address.trim().length > 0)}>
           Domicilio exacto
           <input value={property.location.address} placeholder="Calle, número, colonia" onChange={(event) => updateLocation('address', event.target.value)} />
         </label>
@@ -160,7 +164,7 @@ export function PropertyForm({ property, onChange }: Props) {
             Mostrar domicilio exacto públicamente
           </label>
         </div>
-        <label className="full">
+        <label className={`full ${ok(property.location.references.trim().length > 0)}`}>
           Referencias de ubicación
           <textarea
             value={property.location.references}
@@ -177,19 +181,19 @@ export function PropertyForm({ property, onChange }: Props) {
       </FormSection>
 
       <FormSection icon={<ListChecks size={18} />} title="Características" subtitle="Los datos duros del inmueble.">
-        <label>
+        <label className={ok(property.bedrooms > 0)}>
           Recámaras
           <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('bedrooms', safeNumber(event.target.value))} />
         </label>
-        <label>
+        <label className={ok(property.bathrooms > 0)}>
           Baños
           <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
         </label>
-        <label>
+        <label className={ok(property.parkingSpaces > 0)}>
           Estacionamientos
           <input value={property.parkingSpaces || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('parkingSpaces', safeNumber(event.target.value))} />
         </label>
-        <label>
+        <label className={ok(Boolean(property.areaM2 && property.areaM2 > 0))}>
           Metros cuadrados
           <input
             value={property.areaM2 ?? ''}
@@ -208,7 +212,7 @@ export function PropertyForm({ property, onChange }: Props) {
             Acepta mascotas
           </label>
         </div>
-        <label className="full">
+        <label className={`full ${ok(property.amenities.length > 0)}`}>
           Amenidades, una por línea
           <textarea
             value={textFromList(property.amenities)}
@@ -216,7 +220,7 @@ export function PropertyForm({ property, onChange }: Props) {
             onChange={(event) => updateField('amenities', listFromText(event.target.value))}
           />
         </label>
-        <label className="full">
+        <label className={`full ${ok(property.requirements.length > 0)}`}>
           Requisitos, uno por línea
           <textarea
             value={textFromList(property.requirements)}
@@ -236,11 +240,11 @@ export function PropertyForm({ property, onChange }: Props) {
       </FormSection>
 
       <FormSection icon={<Contact2 size={18} />} title="Contacto" subtitle="A dónde llegan los interesados.">
-        <label>
+        <label className={ok(property.contact.name.trim().length > 0)}>
           Nombre de contacto
           <input value={property.contact.name} placeholder="Tu nombre o el de tu inmobiliaria" onChange={(event) => updateContact('name', event.target.value)} />
         </label>
-        <label>
+        <label className={ok(hasValidWhatsapp(property.contact.whatsapp))}>
           WhatsApp (con lada, ej. 5247...)
           <input value={property.contact.whatsapp} inputMode="tel" placeholder="524771234567" onChange={(event) => updateContact('whatsapp', event.target.value)} />
         </label>

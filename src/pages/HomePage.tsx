@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import {
+  Bath,
+  BedDouble,
   Camera,
   ImageIcon,
   Link2,
@@ -9,12 +11,16 @@ import {
   Rotate3D,
   Send,
   Share2,
+  Sofa,
   Wallet
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { PropertyLanding } from '../components/PropertyLanding';
 import { SiteFooter } from '../components/SiteFooter';
+import { SmartTourSpotlight } from '../components/SmartTourSpotlight';
 import { exampleProperty } from '../data/exampleProperty';
+import { formatPrice } from '../lib/format';
+import { sortPhotos } from '../lib/photos';
 
 export function HomePage() {
   return (
@@ -39,16 +45,21 @@ export function HomePage() {
               <li><Link2 size={16} /> Link compartible al instante</li>
             </ul>
           </div>
-          <div className="intro-card">
+          <HeroPreview />
+        </section>
+
+        <section className="problem-strip" aria-label="El problema y la solución">
+          <div>
             <strong>El problema</strong>
             <p>Marketplace trae interesados, pero limita cómo presentas tu propiedad.</p>
+          </div>
+          <div>
             <strong>La solución</strong>
-            <p>
-              Entaltek Rentas te da una página profesional con fotos, precio, requisitos, ubicación
-              y contacto directo, lista para compartir con un link.
-            </p>
+            <p>Una página profesional con fotos, precio, requisitos, ubicación y contacto directo, lista para compartir con un link.</p>
           </div>
         </section>
+
+        <SmartTourSpotlight />
 
         <section className="example-section" id="ejemplo">
           <div className="section-heading">
@@ -124,6 +135,45 @@ export function HomePage() {
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+// Mockup compacto de la landing generada, para la columna derecha del hero.
+function HeroPreview() {
+  const photos = sortPhotos(exampleProperty.photos);
+  const [cover, ...rest] = photos;
+
+  return (
+    <div className="hero-preview" aria-label="Vista previa de una publicación generada">
+      <div className="hero-preview-bar" aria-hidden="true">
+        <span className="dot" /><span className="dot" /><span className="dot" />
+        <span className="hero-preview-url"><Link2 size={12} /> entaltek.mx/r/tu-propiedad</span>
+      </div>
+      <div className="hero-preview-media">
+        <img src={cover.url} alt={cover.alt} />
+        {cover.title && <span className="photo-overlay">{cover.title}</span>}
+        <span className="hero-preview-price">{formatPrice(exampleProperty)} <small>/ mes</small></span>
+      </div>
+      <div className="hero-preview-thumbs" aria-hidden="true">
+        {rest.slice(0, 2).map((photo) => (
+          <img key={photo.id} src={photo.url} alt="" loading="lazy" />
+        ))}
+        <span className="hero-preview-more"><Camera size={15} /> +4 fotos</span>
+      </div>
+      <div className="hero-preview-info">
+        <strong>{exampleProperty.title}</strong>
+        <span className="hero-preview-location">
+          <MapPin size={14} /> {exampleProperty.location.neighborhood}, {exampleProperty.location.city}
+        </span>
+        <div className="hero-preview-chips">
+          <span><BedDouble size={14} /> 2 recámaras</span>
+          <span><Bath size={14} /> 1 baño</span>
+          <span><Sofa size={14} /> Amueblado</span>
+        </div>
+        <span className="hero-preview-whatsapp"><MessageCircle size={16} /> Contactar por WhatsApp</span>
+      </div>
+      <span className="hero-preview-ready"><Send size={13} /> Link listo para compartir</span>
+    </div>
   );
 }
 
