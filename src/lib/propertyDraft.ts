@@ -1,6 +1,7 @@
 import type { Property } from '../types/property';
+import { createEmptyProperty } from '../types/property';
 
-export const PROPERTY_DRAFT_STORAGE_KEY = 'entaltek-rentas:property-draft';
+export const PROPERTY_DRAFT_STORAGE_KEY = 'entaltek-rentas:property-draft-v2';
 
 export function safeNumber(value: string, fallback = 0): number {
   const parsed = Number(value);
@@ -18,26 +19,39 @@ export function textFromList(value: string[]): string {
   return value.join('\n');
 }
 
-export function loadPropertyDraft(fallback: Property): Property {
+export function loadPropertyDraft(): Property {
+  const empty = createEmptyProperty();
+
   try {
     const stored = window.localStorage.getItem(PROPERTY_DRAFT_STORAGE_KEY);
-    if (!stored) return fallback;
+    if (!stored) return empty;
 
-    const parsed = JSON.parse(stored) as Property;
+    const parsed = JSON.parse(stored) as Partial<Property>;
+    if (!parsed || typeof parsed !== 'object' || !parsed.location || !parsed.contact) {
+      return empty;
+    }
+
     return {
-      ...fallback,
+      ...empty,
       ...parsed,
-      images: parsed.images?.length ? parsed.images : fallback.images,
-      requirements: parsed.requirements?.length ? parsed.requirements : fallback.requirements,
-      amenities: parsed.amenities?.length ? parsed.amenities : fallback.amenities
+      location: { ...empty.location, ...parsed.location },
+      contact: { ...empty.contact, ...parsed.contact },
+      photos: Array.isArray(parsed.photos) ? parsed.photos : [],
+      servicesIncluded: Array.isArray(parsed.servicesIncluded) ? parsed.servicesIncluded : [],
+      amenities: Array.isArray(parsed.amenities) ? parsed.amenities : [],
+      requirements: Array.isArray(parsed.requirements) ? parsed.requirements : []
     };
   } catch {
-    return fallback;
+    return empty;
   }
 }
 
 export function savePropertyDraft(property: Property): void {
-  window.localStorage.setItem(PROPERTY_DRAFT_STORAGE_KEY, JSON.stringify(property));
+  try {
+    window.localStorage.setItem(PROPERTY_DRAFT_STORAGE_KEY, JSON.stringify(property));
+  } catch {
+    // El borrador es una conveniencia; si no cabe (fotos muy pesadas) no rompemos la edición.
+  }
 }
 
 export function clearPropertyDraft(): void {

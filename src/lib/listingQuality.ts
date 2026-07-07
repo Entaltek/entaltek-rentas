@@ -1,4 +1,5 @@
 import type { Property } from '../types/property';
+import { hasValidWhatsapp } from './format';
 
 export interface QualityCheck {
   id: string;
@@ -20,11 +21,18 @@ export interface QualityResult {
 export function calculateListingQuality(property: Property): QualityResult {
   const checks: QualityCheck[] = [
     createCheck({
+      id: 'title',
+      label: 'Título claro',
+      weight: 10,
+      earned: scoreTextLength(property.title, 8, 20, 10),
+      recommendation: 'Escribe un título específico: tipo de propiedad, ventaja principal y zona.'
+    }),
+    createCheck({
       id: 'photos',
       label: 'Galería de fotos',
       weight: 20,
-      earned: scorePhotos(property.images.length),
-      recommendation: getPhotoRecommendation(property.images.length)
+      earned: scorePhotos(property.photos.length),
+      recommendation: getPhotoRecommendation(property.photos.length)
     }),
     createCheck({
       id: 'description',
@@ -38,56 +46,42 @@ export function calculateListingQuality(property: Property): QualityResult {
       label: 'Precio claro',
       weight: 10,
       earned: property.price > 0 ? 10 : 0,
-      recommendation: 'Indica una renta mensual clara para evitar preguntas repetidas.'
+      recommendation: 'Indica un precio claro para evitar preguntas repetidas.'
     }),
     createCheck({
       id: 'location',
       label: 'Ubicación suficiente',
-      weight: 10,
-      earned: scoreLocation(property.zone, property.city),
-      recommendation: 'Agrega zona/colonia y ciudad. No necesitas publicar la dirección exacta.'
+      weight: 12,
+      earned: scoreLocation(property),
+      recommendation: 'Agrega colonia/zona, ciudad y referencias. No necesitas publicar la dirección exacta.'
     }),
     createCheck({
       id: 'contact',
       label: 'Contacto por WhatsApp',
       weight: 10,
-      earned: property.whatsapp.replace(/\D/g, '').length >= 10 ? 10 : 0,
+      earned: hasValidWhatsapp(property.contact.whatsapp) ? 10 : 0,
       recommendation: 'Agrega un WhatsApp válido con lada para facilitar el contacto directo.'
     }),
     createCheck({
       id: 'requirements',
       label: 'Requisitos definidos',
-      weight: 10,
-      earned: scoreList(property.requirements, 1, 3, 10),
-      recommendation: 'Agrega requisitos como identificación, comprobante de ingresos, depósito, aval o póliza jurídica.'
+      weight: 8,
+      earned: scoreList(property.requirements, 1, 3, 8),
+      recommendation: 'Agrega requisitos como identificación, comprobante de ingresos, depósito o aval.'
     }),
     createCheck({
       id: 'amenities',
-      label: 'Amenidades y ventajas',
+      label: 'Amenidades y servicios',
       weight: 8,
-      earned: scoreList(property.amenities, 2, 5, 8),
-      recommendation: 'Agrega amenidades y ventajas: cocina, estacionamiento, seguridad, servicios, mantenimiento o cercanía a puntos clave.'
-    }),
-    createCheck({
-      id: 'availability',
-      label: 'Disponibilidad',
-      weight: 6,
-      earned: property.availableFrom.trim().length > 2 ? 6 : 0,
-      recommendation: 'Indica desde cuándo está disponible para evitar conversaciones innecesarias.'
+      earned: scoreList([...property.amenities, ...property.servicesIncluded], 2, 5, 8),
+      recommendation: 'Agrega amenidades y servicios incluidos: cocina, estacionamiento, seguridad, agua, internet.'
     }),
     createCheck({
       id: 'propertyDetails',
       label: 'Datos básicos del inmueble',
-      weight: 6,
+      weight: 8,
       earned: scorePropertyDetails(property),
-      recommendation: 'Completa recámaras, baños, estacionamiento y metros cuadrados si los conoces.'
-    }),
-    createCheck({
-      id: 'publicLink',
-      label: 'Link público generado',
-      weight: 6,
-      earned: property.slug.trim().length > 0 && !property.id.startsWith('demo-') ? 6 : 0,
-      recommendation: 'Guarda la propiedad en backend y publícala para generar el link que compartirás en Marketplace.'
+      recommendation: 'Completa recámaras, baños, estacionamientos y metros cuadrados si los conoces.'
     })
   ];
 
@@ -99,13 +93,7 @@ export function calculateListingQuality(property: Property): QualityResult {
   const level: QualityResult['level'] = score >= 85 ? 'Excelente' : score >= 65 ? 'Buena' : 'Básica';
   const summary = getSummary(level, score, checks);
 
-  return {
-    score,
-    level,
-    summary,
-    checks,
-    passedCount
-  };
+  return { score, level, summary, checks, passedCount };
 }
 
 function createCheck(check: Omit<QualityCheck, 'passed'>): QualityCheck {
@@ -128,11 +116,9 @@ function getPhotoRecommendation(count: number): string {
   if (count === 0) {
     return 'Agrega fotos reales. Sin fotos la publicación pierde confianza y conversión.';
   }
-
   if (count < 4) {
-    return 'Agrega más fotos: sala, cocina, recámaras, baño y fachada o amenidades.';
+    return 'Agrega más fotos: sala, cocina, recámaras, baño y fachada.';
   }
-
   return 'Agrega al menos 6 fotos claras para que la landing se sienta completa.';
 }
 
@@ -153,21 +139,23 @@ function scoreList(items: string[], minimum: number, ideal: number, weight: numb
   return 0;
 }
 
-function scoreLocation(zone: string, city: string): number {
-  const hasZone = zone.trim().length > 2;
-  const hasCity = city.trim().length > 2;
+function scoreLocation(property: Property): number {
+  const { neighborhood, city, references, nearbyPlaces } = property.location;
+  let earned = 0;
 
-  if (hasZone && hasCity) return 10;
-  if (hasZone || hasCity) return 5;
-  return 0;
+  if (neighborhood.trim().length > 2) earned += 4;
+  if (city.trim().length > 2) earned += 4;
+  if (references.trim().length > 5 || nearbyPlaces.length > 0) earned += 4;
+
+  return earned;
 }
 
 function scorePropertyDetails(property: Property): number {
   const detailScores = [
-    property.type ? 1.5 : 0,
-    property.bedrooms >= 0 ? 1.5 : 0,
-    property.bathrooms >= 0 ? 1.5 : 0,
-    property.parkingSpots >= 0 || Boolean(property.areaM2) ? 1.5 : 0
+    property.bedrooms > 0 || property.propertyType === 'local' || property.propertyType === 'oficina' ? 2 : 0,
+    property.bathrooms > 0 ? 2 : 0,
+    property.areaM2 && property.areaM2 > 0 ? 2 : 0,
+    property.availableFrom.trim().length > 2 ? 2 : 0
   ];
 
   return detailScores.reduce((sum, value) => sum + value, 0);
@@ -179,7 +167,7 @@ function clamp(value: number, min: number, max: number): number {
 
 function getSummary(level: QualityResult['level'], score: number, checks: QualityCheck[]): string {
   const criticalMissing = checks
-    .filter((check) => check.earned === 0 && ['photos', 'price', 'location', 'contact', 'publicLink'].includes(check.id))
+    .filter((check) => check.earned === 0 && ['photos', 'price', 'location', 'contact', 'title'].includes(check.id))
     .map((check) => check.label.toLowerCase());
 
   if (criticalMissing.length) {
