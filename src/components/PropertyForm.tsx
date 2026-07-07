@@ -21,11 +21,12 @@ interface Props {
   onReset: () => void;
   onSaveToBackend: () => void;
   onPublish: () => void;
+  onRemoveImage: (index: number) => void;
   apiStatus: ApiStatus;
   apiMessage: string;
 }
 
-export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onPublish, apiStatus, apiMessage }: Props) {
+export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onPublish, onRemoveImage, apiStatus, apiMessage }: Props) {
   const [imageMessage, setImageMessage] = useState<string>('');
 
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
@@ -82,12 +83,9 @@ export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onP
     updateField('images', images);
   }
 
-  function removeImage(index: number) {
-    updateField('images', property.images.filter((_, imageIndex) => imageIndex !== index));
-  }
-
   const isBusy = apiStatus === 'saving' || apiStatus === 'publishing';
-  const publicLink = property.slug ? `/r/${property.slug}` : '';
+  const publicBaseUrl = (import.meta.env.VITE_PUBLIC_BASE_URL ?? window.location.origin).replace(/\/+$/, '');
+  const publicLink = property.slug && property.status === 'published' ? `${publicBaseUrl}/r/${property.slug}` : '';
 
   return (
     <section className="form-section" id="crear">
@@ -184,7 +182,7 @@ export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onP
                   <button type="button" onClick={() => setCoverImage(index)} disabled={index === 0}>Portada</button>
                   <button type="button" onClick={() => moveImage(index, -1)} disabled={index === 0}>←</button>
                   <button type="button" onClick={() => moveImage(index, 1)} disabled={index === property.images.length - 1}>→</button>
-                  <button type="button" onClick={() => removeImage(index)}>Quitar</button>
+                  <button type="button" onClick={() => onRemoveImage(index)}>Quitar</button>
                 </div>
               </div>
             ))}
@@ -215,7 +213,11 @@ export function PropertyForm({ property, onChange, onReset, onSaveToBackend, onP
         </div>
 
         {apiMessage && <p className={`api-message full ${apiStatus === 'error' ? 'error' : 'success'}`}>{apiMessage}</p>}
-        {publicLink && <p className="api-message full success">Link público local: <strong>{publicLink}</strong></p>}
+        {publicLink && (
+          <p className="api-message full success">
+            Link público: <a href={publicLink} target="_blank" rel="noreferrer"><strong>{publicLink}</strong></a>
+          </p>
+        )}
       </form>
     </section>
   );

@@ -35,5 +35,6 @@ export const demoProperty: Property = {
   ],
   contactName: 'Asesor inmobiliario',
   whatsapp: '524771234567',
+  status: 'draft',
   createdAt: new Date().toISOString()
 };

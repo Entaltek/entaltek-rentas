@@ -1,54 +1,54 @@
-import type { Property, PropertyType } from '../types/property';
+import type { Property, PropertyImageRef, PropertyStatus, PropertyType } from '../types/property';
+import { apiFetch, resolveMediaUrl } from './client';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000';
+// --- Tipos alineados con backend/app/schemas/property.py ---
 
 export interface ApiPropertyImage {
-  id?: string;
-  url?: string;
-  image_url?: string;
-  public_url?: string;
-  alt_text?: string | null;
-  sort_order?: number;
-  is_cover?: boolean;
-  created_at?: string;
+  id: string;
+  url: string;
+  alt_text: string | null;
+  sort_order: number;
+  is_cover: boolean;
+  created_at: string;
 }
 
 export interface ApiProperty {
   id: string;
   slug: string | null;
   title: string;
-  property_type: PropertyType;
-  price: string;
-  currency: 'MXN';
+  property_type: string;
+  /** Pydantic serializa Decimal como string en JSON. */
+  price: string | number;
+  currency: string;
   zone: string;
   city: string;
   bedrooms: number;
   bathrooms: number;
   parking_spots: number;
-  area_m2?: number | null;
+  area_m2: number | null;
   furnished: boolean;
   pets_allowed: boolean;
   maintenance_included: boolean;
   deposit_months: number;
-  minimum_stay_months?: number | null;
+  minimum_stay_months: number | null;
   available_from: string;
   description: string | null;
   requirements: string[] | null;
   amenities: string[] | null;
   contact_name: string;
   whatsapp: string;
-  status: 'draft' | 'published' | 'archived';
+  status: PropertyStatus;
   created_at: string;
-  updated_at?: string;
-  published_at?: string | null;
+  updated_at: string;
+  published_at: string | null;
   images: ApiPropertyImage[];
 }
 
 export interface CreatePropertyPayload {
   title: string;
-  property_type: PropertyType;
+  property_type: string;
   price: number;
-  currency: 'MXN';
+  currency: string;
   zone: string;
   city: string;
   bedrooms: number;
@@ -61,14 +61,18 @@ export interface CreatePropertyPayload {
   deposit_months: number;
   minimum_stay_months?: number;
   available_from: string;
-  description: string;
-  requirements: string[];
-  amenities: string[];
+  description?: string;
+  requirements?: string[];
+  amenities?: string[];
   contact_name: string;
   whatsapp: string;
 }
 
-export function toCreatePropertyPayload(property: Property): CreatePropertyPayload {
+export type UpdatePropertyPayload = Partial<CreatePropertyPayload>;
+
+// --- Mapeo entre el modelo del frontend y los schemas del backend ---
+
+export function toPropertyPayload(property: Property): CreatePropertyPayload {
   return {
     title: property.title,
     property_type: property.type,
@@ -79,12 +83,13 @@ export function toCreatePropertyPayload(property: Property): CreatePropertyPaylo
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms,
     parking_spots: property.parkingSpots,
-    area_m2: property.areaM2,
+    // El backend exige area_m2 > 0 cuando viene; 0 significa "sin capturar".
+    area_m2: property.areaM2 || undefined,
     furnished: property.furnished,
     pets_allowed: property.petsAllowed,
     maintenance_included: property.maintenanceIncluded,
     deposit_months: property.depositMonths,
-    minimum_stay_months: property.minimumStayMonths,
+    minimum_stay_months: property.minimumStayMonths || undefined,
     available_from: property.availableFrom,
     description: property.description,
     requirements: property.requirements,
@@ -94,14 +99,27 @@ export function toCreatePropertyPayload(property: Property): CreatePropertyPaylo
   };
 }
 
+function toImageRef(image: ApiPropertyImage): PropertyImageRef {
+  return {
+    id: image.id,
+    url: resolveMediaUrl(image.url),
+    isCover: image.is_cover,
+    sortOrder: image.sort_order
+  };
+}
+
 export function fromApiProperty(apiProperty: ApiProperty): Property {
+  const imageRecords = [...apiProperty.images]
+    .sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order)
+    .map(toImageRef);
+
   return {
     id: apiProperty.id,
     slug: apiProperty.slug ?? '',
     title: apiProperty.title,
-    type: apiProperty.property_type,
+    type: apiProperty.property_type as PropertyType,
     price: Number(apiProperty.price),
-    currency: apiProperty.currency,
+    currency: apiProperty.currency as Property['currency'],
     zone: apiProperty.zone,
     city: apiProperty.city,
     bedrooms: apiProperty.bedrooms,
@@ -117,38 +135,55 @@ export function fromApiProperty(apiProperty: ApiProperty): Property {
     description: apiProperty.description ?? '',
     requirements: apiProperty.requirements ?? [],
     amenities: apiProperty.amenities ?? [],
-    images: apiProperty.images.map(getImageUrl).filter(Boolean),
+    images: imageRecords.map((image) => image.url),
+    imageRecords,
     contactName: apiProperty.contact_name,
     whatsapp: apiProperty.whatsapp,
+    status: apiProperty.status,
     createdAt: apiProperty.created_at
   };
 }
 
+// --- Endpoints ---
+
 export async function createProperty(property: Property): Promise<Property> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/properties`, {
+  const apiProperty = await apiFetch<ApiProperty>('/api/v1/properties', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(toCreatePropertyPayload(property))
+    body: JSON.stringify(toPropertyPayload(property))
   });
+  return fromApiProperty(apiProperty);
+}
 
-  return parsePropertyResponse(response);
+export async function updateProperty(propertyId: string, payload: UpdatePropertyPayload): Promise<Property> {
+  const apiProperty = await apiFetch<ApiProperty>(`/api/v1/properties/${propertyId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return fromApiProperty(apiProperty);
 }
 
 export async function publishProperty(propertyId: string): Promise<Property> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/properties/${propertyId}/publish`, {
+  const apiProperty = await apiFetch<ApiProperty>(`/api/v1/properties/${propertyId}/publish`, {
     method: 'POST'
   });
+  return fromApiProperty(apiProperty);
+}
 
-  return parsePropertyResponse(response);
+export async function archiveProperty(propertyId: string): Promise<Property> {
+  const apiProperty = await apiFetch<ApiProperty>(`/api/v1/properties/${propertyId}/archive`, {
+    method: 'POST'
+  });
+  return fromApiProperty(apiProperty);
 }
 
 export async function getPropertyBySlug(slug: string): Promise<Property> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/properties/${slug}`);
-
-  return parsePropertyResponse(response);
+  const apiProperty = await apiFetch<ApiProperty>(`/api/v1/properties/${encodeURIComponent(slug)}`);
+  return fromApiProperty(apiProperty);
 }
 
-export async function uploadPropertyImages(propertyId: string, imageDataUrls: string[]): Promise<string[]> {
+export async function uploadPropertyImages(propertyId: string, imageDataUrls: string[]): Promise<PropertyImageRef[]> {
   const uploadableImages = imageDataUrls.filter((image) => image.startsWith('data:image/'));
 
   if (!uploadableImages.length) {
@@ -160,37 +195,18 @@ export async function uploadPropertyImages(propertyId: string, imageDataUrls: st
     formData.append('files', dataUrlToFile(image, `property-image-${index + 1}`));
   });
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/properties/${propertyId}/images`, {
+  const images = await apiFetch<ApiPropertyImage[]>(`/api/v1/properties/${propertyId}/images`, {
     method: 'POST',
     body: formData
   });
 
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'No se pudieron subir las imágenes.');
-  }
-
-  const images = await response.json() as ApiPropertyImage[];
-  return images.map(getImageUrl).filter(Boolean);
+  return images.map(toImageRef);
 }
 
-async function parsePropertyResponse(response: Response): Promise<Property> {
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'No se pudo procesar la propiedad.');
-  }
-
-  const apiProperty = await response.json() as ApiProperty;
-  return fromApiProperty(apiProperty);
-}
-
-function getImageUrl(image: ApiPropertyImage): string {
-  const rawUrl = image.url ?? image.image_url ?? image.public_url ?? '';
-
-  if (!rawUrl) return '';
-  if (rawUrl.startsWith('http') || rawUrl.startsWith('data:')) return rawUrl;
-
-  return `${API_BASE_URL}${rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`}`;
+export async function deletePropertyImage(propertyId: string, imageId: string): Promise<void> {
+  await apiFetch<void>(`/api/v1/properties/${propertyId}/images/${imageId}`, {
+    method: 'DELETE'
+  });
 }
 
 function dataUrlToFile(dataUrl: string, fallbackName: string): File {

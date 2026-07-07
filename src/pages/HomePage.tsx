@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { createProperty, publishProperty, uploadPropertyImages } from '../api/properties';
+import {
+  createProperty,
+  deletePropertyImage,
+  publishProperty,
+  toPropertyPayload,
+  updateProperty,
+  uploadPropertyImages
+} from '../api/properties';
 import { Header } from '../components/Header';
 import { ListingQualityCard } from '../components/ListingQualityCard';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
@@ -10,6 +17,11 @@ import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib
 import type { Property } from '../types/property';
 
 type ApiStatus = 'idle' | 'saving' | 'publishing' | 'saved' | 'published' | 'error';
+
+/** Una propiedad existe en backend cuando tiene un id real (UUID), no el id local del demo. */
+function isSavedInBackend(property: Property): boolean {
+  return Boolean(property.id) && !property.id.startsWith('demo-');
+}
 
 export function HomePage() {
   const [property, setProperty] = useState<Property>(() => loadPropertyDraft(demoProperty));
@@ -33,20 +45,31 @@ export function HomePage() {
 
     try {
       const localImages = property.images.filter((image) => image.startsWith('data:image/'));
-      const savedProperty = await createProperty(property);
+      const alreadySaved = isSavedInBackend(property);
+
+      const savedProperty = alreadySaved
+        ? await updateProperty(property.id, toPropertyPayload(property))
+        : await createProperty(property);
+
+      let imageRecords = savedProperty.imageRecords ?? [];
 
       if (localImages.length) {
         setApiMessage(`Propiedad guardada. Subiendo ${localImages.length} foto${localImages.length === 1 ? '' : 's'}...`);
-        const uploadedImageUrls = await uploadPropertyImages(savedProperty.id, localImages);
-        setProperty({ ...savedProperty, images: uploadedImageUrls });
-        setApiStatus('saved');
-        setApiMessage(`Propiedad guardada con ${uploadedImageUrls.length} foto${uploadedImageUrls.length === 1 ? '' : 's'} en backend. Ya puedes publicarla.`);
-        return;
+        const uploadedImages = await uploadPropertyImages(savedProperty.id, localImages);
+        imageRecords = [...imageRecords, ...uploadedImages];
       }
 
-      setProperty(savedProperty);
+      setProperty({
+        ...savedProperty,
+        images: imageRecords.map((image) => image.url),
+        imageRecords
+      });
       setApiStatus('saved');
-      setApiMessage('Propiedad guardada en backend. Ya puedes publicarla para generar el link.');
+      setApiMessage(
+        alreadySaved
+          ? 'Propiedad actualizada en backend.'
+          : 'Propiedad guardada en backend. Ya puedes publicarla para generar el link.'
+      );
     } catch (error) {
       setApiStatus('error');
       setApiMessage(error instanceof Error ? error.message : 'No se pudo guardar la propiedad.');
@@ -54,7 +77,7 @@ export function HomePage() {
   }
 
   async function handlePublish() {
-    if (!property.id || property.id.startsWith('demo-')) {
+    if (!isSavedInBackend(property)) {
       setApiStatus('error');
       setApiMessage('Primero guarda la propiedad en backend antes de publicarla.');
       return;
@@ -72,6 +95,27 @@ export function HomePage() {
       setApiStatus('error');
       setApiMessage(error instanceof Error ? error.message : 'No se pudo publicar la propiedad.');
     }
+  }
+
+  async function handleRemoveImage(index: number) {
+    const imageUrl = property.images[index];
+    const record = property.imageRecords?.find((image) => image.url === imageUrl);
+
+    if (record && isSavedInBackend(property)) {
+      try {
+        await deletePropertyImage(property.id, record.id);
+      } catch (error) {
+        setApiStatus('error');
+        setApiMessage(error instanceof Error ? error.message : 'No se pudo eliminar la imagen en backend.');
+        return;
+      }
+    }
+
+    setProperty({
+      ...property,
+      images: property.images.filter((_, imageIndex) => imageIndex !== index),
+      imageRecords: property.imageRecords?.filter((image) => image.id !== record?.id)
+    });
   }
 
   return (
@@ -102,6 +146,7 @@ export function HomePage() {
           onReset={resetDraft}
           onSaveToBackend={handleSaveToBackend}
           onPublish={handlePublish}
+          onRemoveImage={handleRemoveImage}
           apiStatus={apiStatus}
           apiMessage={apiMessage}
         />
