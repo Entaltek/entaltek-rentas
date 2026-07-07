@@ -1,22 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Copy, MessageCircle } from 'lucide-react';
+import { Check, Copy, ExternalLink, MessageCircle } from 'lucide-react';
 import type { Property } from '../types/property';
 import { generateMarketplaceCopy } from '../lib/marketplaceCopy';
 
 interface Props {
   property: Property;
   sectionId?: string;
+  onCopied?: () => void;
 }
 
 type CopyStatus = 'idle' | 'copied' | 'error';
 
-export function MarketplaceCopy({ property, sectionId }: Props) {
+export function MarketplaceCopy({ property, sectionId, onCopied }: Props) {
   const [status, setStatus] = useState<CopyStatus>('idle');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const publicUrl = useMemo(() => {
-    if (!property.slug) return '';
+    if (!property.slug || property.status !== 'published') return '';
     return `${window.location.origin}/r/${property.slug}`;
-  }, [property.slug]);
+  }, [property.slug, property.status]);
   const copy = generateMarketplaceCopy(property, { publicUrl });
   const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(copy)}`;
 
@@ -30,6 +31,7 @@ export function MarketplaceCopy({ property, sectionId }: Props) {
     try {
       await navigator.clipboard.writeText(copy);
       setStatus('copied');
+      onCopied?.();
     } catch {
       textareaRef.current?.select();
       setStatus('error');
@@ -42,11 +44,12 @@ export function MarketplaceCopy({ property, sectionId }: Props) {
         <p className="eyebrow">Texto listo para publicar</p>
         <h2>Copy para Marketplace y grupos</h2>
         <p className="section-note">
-          Publica este texto en Facebook Marketplace, grupos de renta o WhatsApp. Cuando la propiedad ya tenga slug, agregamos el link completo automáticamente.
+          Pega este texto en Facebook Marketplace, grupos de renta o WhatsApp. Cuando publiques la
+          propiedad, el link público se agrega automáticamente.
         </p>
         {publicUrl && (
           <a href={publicUrl} target="_blank" rel="noreferrer" className="public-link-pill">
-            Abrir landing pública
+            <ExternalLink size={15} /> Abrir landing pública
           </a>
         )}
       </div>

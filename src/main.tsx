@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { EditorPage } from './pages/EditorPage';
 import { HomePage } from './pages/HomePage';
 import { PublicPropertyPage } from './pages/PublicPropertyPage';
 import './styles.css';
@@ -10,6 +11,10 @@ function App() {
 
   if (publicPropertyMatch?.[1]) {
     return <PublicPropertyPage slug={decodeURIComponent(publicPropertyMatch[1])} />;
+  }
+
+  if (path === '/crear' || path === '/crear/') {
+    return <EditorPage />;
   }
 
   return <HomePage />;

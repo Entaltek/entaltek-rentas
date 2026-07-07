@@ -1,121 +1,141 @@
-import { useEffect, useState } from 'react';
-import { createProperty, publishProperty, uploadPropertyImages } from '../api/properties';
+import type { ReactNode } from 'react';
+import {
+  Camera,
+  ImageIcon,
+  Link2,
+  MapPin,
+  MessageCircle,
+  PencilLine,
+  Rotate3D,
+  Send,
+  Share2,
+  Wallet
+} from 'lucide-react';
 import { Header } from '../components/Header';
-import { ListingQualityCard } from '../components/ListingQualityCard';
-import { MarketplaceCopy } from '../components/MarketplaceCopy';
-import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
-import { demoProperty } from '../data/demoProperty';
-import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib/propertyDraft';
-import type { Property } from '../types/property';
-
-type ApiStatus = 'idle' | 'saving' | 'publishing' | 'saved' | 'published' | 'error';
+import { SiteFooter } from '../components/SiteFooter';
+import { exampleProperty } from '../data/exampleProperty';
 
 export function HomePage() {
-  const [property, setProperty] = useState<Property>(() => loadPropertyDraft(demoProperty));
-  const [apiStatus, setApiStatus] = useState<ApiStatus>('idle');
-  const [apiMessage, setApiMessage] = useState('');
-
-  useEffect(() => {
-    savePropertyDraft(property);
-  }, [property]);
-
-  function resetDraft() {
-    clearPropertyDraft();
-    setProperty(demoProperty);
-    setApiStatus('idle');
-    setApiMessage('');
-  }
-
-  async function handleSaveToBackend() {
-    setApiStatus('saving');
-    setApiMessage('Guardando propiedad en backend...');
-
-    try {
-      const localImages = property.images.filter((image) => image.startsWith('data:image/'));
-      const savedProperty = await createProperty(property);
-
-      if (localImages.length) {
-        setApiMessage(`Propiedad guardada. Subiendo ${localImages.length} foto${localImages.length === 1 ? '' : 's'}...`);
-        const uploadedImageUrls = await uploadPropertyImages(savedProperty.id, localImages);
-        setProperty({ ...savedProperty, images: uploadedImageUrls });
-        setApiStatus('saved');
-        setApiMessage(`Propiedad guardada con ${uploadedImageUrls.length} foto${uploadedImageUrls.length === 1 ? '' : 's'} en backend. Ya puedes publicarla.`);
-        return;
-      }
-
-      setProperty(savedProperty);
-      setApiStatus('saved');
-      setApiMessage('Propiedad guardada en backend. Ya puedes publicarla para generar el link.');
-    } catch (error) {
-      setApiStatus('error');
-      setApiMessage(error instanceof Error ? error.message : 'No se pudo guardar la propiedad.');
-    }
-  }
-
-  async function handlePublish() {
-    if (!property.id || property.id.startsWith('demo-')) {
-      setApiStatus('error');
-      setApiMessage('Primero guarda la propiedad en backend antes de publicarla.');
-      return;
-    }
-
-    setApiStatus('publishing');
-    setApiMessage('Publicando propiedad y generando link...');
-
-    try {
-      const publishedProperty = await publishProperty(property.id);
-      setProperty(publishedProperty);
-      setApiStatus('published');
-      setApiMessage(`Link generado: /r/${publishedProperty.slug}`);
-    } catch (error) {
-      setApiStatus('error');
-      setApiMessage(error instanceof Error ? error.message : 'No se pudo publicar la propiedad.');
-    }
-  }
-
   return (
     <>
       <Header />
-      <main>
+      <main className="home-page">
         <section className="intro">
-          <div>
-            <p className="eyebrow">MVP inmobiliario</p>
-            <h1>Publica en Marketplace, pero presenta tu propiedad como profesional.</h1>
+          <div className="intro-copy">
+            <p className="eyebrow">Entaltek Rentas</p>
+            <h1>Crea una publicación profesional para rentar tu propiedad</h1>
             <p>
-              Crea una mini landing para cada renta con fotos, requisitos, amenidades, precio claro y contacto directo por WhatsApp.
+              Sube fotos, agrega precio, ubicación y requisitos. Genera una landing lista para
+              compartir en Marketplace o WhatsApp en minutos.
             </p>
             <div className="hero-actions">
-              <a href="#demo" className="primary-button">Ver demo</a>
-              <a href="#crear" className="secondary-button">Crear propiedad</a>
+              <a href="/crear" className="primary-button large">Crear propiedad</a>
+              <a href="#ejemplo" className="secondary-button large">Explorar ejemplo</a>
             </div>
+            <ul className="hero-points">
+              <li><Camera size={16} /> Galería profesional</li>
+              <li><MessageCircle size={16} /> Contacto directo por WhatsApp</li>
+              <li><Link2 size={16} /> Link compartible al instante</li>
+            </ul>
           </div>
           <div className="intro-card">
-            <strong>Idea central</strong>
-            <p>Facebook Marketplace trae el tráfico. Entaltek Rentas agrega la capa profesional de presentación y conversión.</p>
+            <strong>El problema</strong>
+            <p>Marketplace trae interesados, pero limita cómo presentas tu propiedad.</p>
+            <strong>La solución</strong>
+            <p>
+              Entaltek Rentas te da una página profesional con fotos, precio, requisitos, ubicación
+              y contacto directo, lista para compartir con un link.
+            </p>
           </div>
         </section>
 
-        <PropertyForm
-          property={property}
-          onChange={setProperty}
-          onReset={resetDraft}
-          onSaveToBackend={handleSaveToBackend}
-          onPublish={handlePublish}
-          apiStatus={apiStatus}
-          apiMessage={apiMessage}
-        />
-        <ListingQualityCard property={property} />
-        <PropertyLanding property={property} sectionId="demo" />
-        <MarketplaceCopy property={property} sectionId="copy" />
+        <section className="example-section" id="ejemplo">
+          <div className="section-heading">
+            <p className="eyebrow">Ejemplo en vivo</p>
+            <h2>Así se verá tu propiedad cuando la publiques</h2>
+            <p className="section-note">
+              Esta es una propiedad de ejemplo. La tuya se genera con tus datos reales: edítala en
+              el editor y compártela con un solo link.
+            </p>
+          </div>
+          <div className="example-frame">
+            <div className="example-frame-bar" aria-hidden="true">
+              <span className="dot" /><span className="dot" /><span className="dot" />
+              <span className="example-url"><Link2 size={13} /> entaltek.mx/r/tu-propiedad</span>
+              <span className="example-ready"><Send size={13} /> Link listo para compartir</span>
+            </div>
+            <PropertyLanding property={exampleProperty} variant="preview" />
+          </div>
+        </section>
+
+        <section className="how-section">
+          <div className="section-heading">
+            <p className="eyebrow">Cómo funciona</p>
+            <h2>De tus fotos a un link compartible en 3 pasos</h2>
+          </div>
+          <div className="steps-grid">
+            <div className="step-card">
+              <span className="step-number">1</span>
+              <PencilLine size={22} />
+              <h3>Captura tu propiedad</h3>
+              <p>Título, precio, condiciones y características en un editor guiado con vista previa en vivo.</p>
+            </div>
+            <div className="step-card">
+              <span className="step-number">2</span>
+              <Camera size={22} />
+              <h3>Sube fotos y ubicación</h3>
+              <p>Galería con títulos por foto, zona aproximada o domicilio exacto y lugares cercanos.</p>
+            </div>
+            <div className="step-card">
+              <span className="step-number">3</span>
+              <Share2 size={22} />
+              <h3>Publica y comparte tu link</h3>
+              <p>Genera la landing pública y compártela en Marketplace, grupos o WhatsApp con copy listo.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="includes-section">
+          <div className="section-heading">
+            <p className="eyebrow">Qué incluye</p>
+            <h2>Todo lo que una publicación normal no te deja mostrar</h2>
+          </div>
+          <div className="includes-grid">
+            <IncludeCard icon={<ImageIcon size={20} />} title="Galería profesional" text="Fotos grandes, ordenadas y con título: sala, cocina, recámaras." />
+            <IncludeCard icon={<Wallet size={20} />} title="Precio y condiciones claras" text="Renta, depósito, contrato y servicios incluidos sin letras chiquitas." />
+            <IncludeCard icon={<MapPin size={20} />} title="Ubicación y alrededores" text="Zona, referencias y lugares cercanos. Tú decides si mostrar el domicilio exacto." />
+            <IncludeCard icon={<MessageCircle size={20} />} title="Contacto por WhatsApp" text="Botón directo con mensaje prellenado para no perder interesados." />
+            <IncludeCard icon={<Link2 size={20} />} title="Link para Marketplace" text="Un solo link con toda la información, listo para pegar en tu publicación." />
+            <IncludeCard
+              icon={<Rotate3D size={20} />}
+              title="Recorrido inteligente"
+              text="Muy pronto: sube fotos o video y genera una experiencia inmersiva con vista 360 y plano."
+              soon
+            />
+          </div>
+        </section>
+
+        <section className="final-cta">
+          <h2>Publica mejor. Renta más rápido.</h2>
+          <p>Convierte tus fotos en una publicación profesional en minutos.</p>
+          <a href="/crear" className="primary-button large">Crear mi propiedad</a>
+        </section>
       </main>
-      <footer className="site-footer">
-        <p><strong>Entaltek Rentas</strong> · Mini landings para rentar más rápido.</p>
-        <p>
-          La información de cada propiedad es responsabilidad del anunciante. Verifica el inmueble en persona
-          antes de entregar depósitos o firmar contratos.
-        </p>
-      </footer>
+      <SiteFooter />
     </>
+  );
+}
+
+function IncludeCard({ icon, title, text, soon }: { icon: ReactNode; title: string; text: string; soon?: boolean }) {
+  return (
+    <div className={`include-card ${soon ? 'is-soon' : ''}`}>
+      <div className="include-icon">{icon}</div>
+      <h3>
+        {title}
+        {soon && <span className="badge-soon">Próximamente</span>}
+      </h3>
+      <p>{text}</p>
+    </div>
   );
 }
