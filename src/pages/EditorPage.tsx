@@ -19,7 +19,7 @@ import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
 import { ToastStack, useToasts } from '../components/Toast';
-import { calculateListingQuality } from '../lib/listingQuality';
+import { hasValidWhatsapp } from '../lib/format';
 import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib/propertyDraft';
 import { validateForPublish } from '../lib/validation';
 import { publishProperty, saveProperty, unpublishProperty } from '../services/propertyService';
@@ -27,6 +27,7 @@ import type { Property } from '../types/property';
 import { createEmptyProperty } from '../types/property';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'publishing' | 'error';
+type ProgressItem = { label: string; complete: boolean };
 
 export function EditorPage() {
   const [property, setProperty] = useState<Property>(() => loadPropertyDraft());
@@ -57,8 +58,8 @@ export function EditorPage() {
     };
   }, [isFullscreenPreviewOpen]);
 
-  const quality = useMemo(() => calculateListingQuality(property), [property]);
   const validation = useMemo(() => validateForPublish(property), [property]);
+  const progressItems = useMemo(() => getEditorProgressItems(property), [property]);
   const isBusy = saveStatus === 'saving' || saveStatus === 'publishing';
   const isPublished = property.status === 'published';
   const publicUrl = isPublished && property.slug ? `${window.location.origin}/r/${property.slug}` : '';
@@ -152,11 +153,6 @@ export function EditorPage() {
             <h1>{property.title.trim() || 'Nueva propiedad'}</h1>
             <div className="editor-status-row">
               <StatusPill status={property.status} saveStatus={saveStatus} />
-              <div className="completeness is-wide" aria-label="Avance de información">
-                <div className="completeness-bar" role="progressbar" aria-valuenow={quality.score} aria-valuemin={0} aria-valuemax={100}>
-                  <span style={{ width: `${quality.score}%` }} />
-                </div>
-              </div>
             </div>
           </div>
           <div className="editor-actions">
@@ -179,6 +175,8 @@ export function EditorPage() {
             )}
           </div>
         </section>
+
+        <EditorProgressLabels items={progressItems} />
 
         {publishErrors.length > 0 && (
           <div className="publish-errors" role="alert">
@@ -270,6 +268,50 @@ export function EditorPage() {
       <ToastStack toasts={toasts} />
       <SiteFooter />
     </>
+  );
+}
+
+function getEditorProgressItems(property: Property): ProgressItem[] {
+  const hasBathroomDetails = Boolean((property.fullBathrooms ?? 0) + (property.halfBathrooms ?? 0) + (property.sharedBathrooms ?? 0) || property.bathrooms > 0);
+
+  return [
+    {
+      label: 'Información',
+      complete: property.title.trim().length >= 5 && property.description.trim().length >= 30
+    },
+    {
+      label: 'Precio',
+      complete: property.price > 0 && property.depositText.trim().length > 0 && property.minimumContractText.trim().length > 0 && property.availableFrom.trim().length > 0
+    },
+    {
+      label: 'Ubicación',
+      complete: property.location.state.trim().length > 0 && property.location.city.trim().length > 0 && property.location.neighborhood.trim().length > 0
+    },
+    {
+      label: 'Detalles',
+      complete: Boolean(property.areaM2 || property.bedrooms > 0 || hasBathroomDetails || property.featureTags.length > 0 || property.amenities.length > 0)
+    },
+    {
+      label: 'Fotos',
+      complete: property.photos.length > 0
+    },
+    {
+      label: 'Contacto',
+      complete: property.contact.name.trim().length > 0 && hasValidWhatsapp(property.contact.whatsapp)
+    }
+  ];
+}
+
+function EditorProgressLabels({ items }: { items: ProgressItem[] }) {
+  return (
+    <nav className="editor-progress-labels" aria-label="Avance de captura de propiedad">
+      {items.map((item, index) => (
+        <span key={item.label} className={`editor-progress-label ${item.complete ? 'is-complete' : 'is-pending'}`}>
+          <span>{item.complete ? <CheckCircle2 size={15} /> : index + 1}</span>
+          {item.label}
+        </span>
+      ))}
+    </nav>
   );
 }
 
