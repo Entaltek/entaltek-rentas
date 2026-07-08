@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Bath,
   BedDouble,
@@ -56,6 +56,7 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
   const whatsappUrl = buildWhatsappUrl(property);
   const locationShort = formatLocationShort(property);
   const showAddress = property.location.showExactAddress && property.location.address.trim();
+  const hasLocationDetails = locationShort || showAddress || property.location.references || property.location.nearbyPlaces.length > 0 || isPreview;
 
   const features = [
     property.bedrooms > 0 && { icon: <BedDouble size={18} />, label: `${property.bedrooms} recámara${property.bedrooms === 1 ? '' : 's'}` },
@@ -139,11 +140,64 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
           </div>
 
           {features.length > 0 && (
-            <div className="feature-grid">
-              {features.map((feature) => (
-                <Feature key={feature.label} icon={feature.icon} label={feature.label} />
-              ))}
-            </div>
+            <section className="landing-block landing-block-compact">
+              <h2>Características principales</h2>
+              <div className="feature-grid">
+                {features.map((feature) => (
+                  <Feature key={feature.label} icon={feature.icon} label={feature.label} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {hasLocationDetails && (
+            <section className="landing-block">
+              <h2>Ubicación y alrededores</h2>
+              <div className="location-card">
+                {(locationShort || isPreview) && (
+                  <p className="location-line"><MapPin size={18} /> {locationShort || 'Zona de la propiedad'}</p>
+                )}
+                {showAddress ? (
+                  <p className="location-address">{property.location.address}</p>
+                ) : (
+                  (locationShort || isPreview) && <p className="location-note">Zona aproximada. El domicilio exacto se comparte con interesados.</p>
+                )}
+                {(property.location.references || isPreview) && (
+                  <p className="location-references">{property.location.references || 'Referencias útiles para entender la zona aparecerán aquí.'}</p>
+                )}
+              </div>
+              <PropertyMap property={property} isPreview={isPreview} />
+              {property.location.nearbyPlaces.length > 0 && (
+                <div className="nearby-grid">
+                  {property.location.nearbyPlaces.map((place) => {
+                    const Icon = NEARBY_ICONS[place.type];
+                    return (
+                      <div className="nearby-card" key={place.id}>
+                        <div className="nearby-icon"><Icon size={18} /></div>
+                        <div>
+                          <strong>{place.name}</strong>
+                          <span>
+                            {NEARBY_PLACE_TYPE_LABELS[place.type]}
+                            {place.distanceText ? ` · ${place.distanceText}` : ''}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          )}
+
+          {conditions.length > 0 && (
+            <section className="landing-block">
+              <h2>Condiciones de {property.operationType === 'venta' ? 'venta' : 'renta'}</h2>
+              <ul className="check-list">
+                {conditions.map((item) => (
+                  <li key={item}><CheckCircle2 size={18} /> {item}</li>
+                ))}
+              </ul>
+            </section>
           )}
 
           {property.amenities.length > 0 && (
@@ -164,17 +218,6 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
             </section>
           )}
 
-          {conditions.length > 0 && (
-            <section className="landing-block">
-              <h2>Condiciones de {property.operationType === 'venta' ? 'venta' : 'renta'}</h2>
-              <ul className="check-list">
-                {conditions.map((item) => (
-                  <li key={item}><CheckCircle2 size={18} /> {item}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
           {property.requirements.length > 0 && (
             <section className="landing-block">
               <h2>Requisitos</h2>
@@ -183,44 +226,6 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
                   <li key={item}><CheckCircle2 size={18} /> {item}</li>
                 ))}
               </ul>
-            </section>
-          )}
-
-          {(locationShort || showAddress || property.location.references || property.location.nearbyPlaces.length > 0) && (
-            <section className="landing-block">
-              <h2>Ubicación y alrededores</h2>
-              <div className="location-card">
-                {locationShort && (
-                  <p className="location-line"><MapPin size={18} /> {locationShort}</p>
-                )}
-                {showAddress ? (
-                  <p className="location-address">{property.location.address}</p>
-                ) : (
-                  locationShort && <p className="location-note">Zona aproximada. El domicilio exacto se comparte con interesados.</p>
-                )}
-                {property.location.references && (
-                  <p className="location-references">{property.location.references}</p>
-                )}
-              </div>
-              {property.location.nearbyPlaces.length > 0 && (
-                <div className="nearby-grid">
-                  {property.location.nearbyPlaces.map((place) => {
-                    const Icon = NEARBY_ICONS[place.type];
-                    return (
-                      <div className="nearby-card" key={place.id}>
-                        <div className="nearby-icon"><Icon size={18} /></div>
-                        <div>
-                          <strong>{place.name}</strong>
-                          <span>
-                            {NEARBY_PLACE_TYPE_LABELS[place.type]}
-                            {place.distanceText ? ` · ${place.distanceText}` : ''}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </section>
           )}
         </div>
@@ -257,6 +262,43 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
         </div>
       )}
     </article>
+  );
+}
+
+function PropertyMap({ property, isPreview }: { property: Property; isPreview: boolean }) {
+  const hasCoordinates = typeof property.location.lat === 'number' && typeof property.location.lng === 'number';
+  const canShowExactMap = hasCoordinates && property.location.showExactAddress;
+  const locationLabel = formatLocationShort(property) || 'Ubicación de la propiedad';
+
+  const mapUrl = useMemo(() => {
+    if (!canShowExactMap || typeof property.location.lat !== 'number' || typeof property.location.lng !== 'number') return '';
+
+    const { lat, lng } = property.location;
+    const delta = 0.01;
+    const bbox = `${lng - delta}%2C${lat - delta}%2C${lng + delta}%2C${lat + delta}`;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
+  }, [canShowExactMap, property.location.lat, property.location.lng]);
+
+  if (canShowExactMap && mapUrl) {
+    return (
+      <div className="property-map">
+        <iframe title={`Mapa de ${locationLabel}`} src={mapUrl} loading="lazy" />
+      </div>
+    );
+  }
+
+  if (!hasCoordinates && !isPreview && !locationLabel.trim()) return null;
+
+  return (
+    <div className="property-map property-map-placeholder" aria-label="Mapa aproximado de la propiedad">
+      <div className="map-grid-bg" aria-hidden="true" />
+      <span className="map-pin"><MapPin size={22} /></span>
+      <div className="map-copy">
+        <strong>{hasCoordinates ? 'Mapa aproximado' : 'Zona de la propiedad'}</strong>
+        <span>{locationLabel}</span>
+        <small>{hasCoordinates ? 'El domicilio exacto no está publicado.' : 'Agrega coordenadas para mostrar un mapa más preciso.'}</small>
+      </div>
+    </div>
   );
 }
 
