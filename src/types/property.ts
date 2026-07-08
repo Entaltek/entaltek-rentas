@@ -8,6 +8,12 @@ export type PricePeriod = 'monthly' | 'weekly' | 'daily';
 
 export type Currency = 'MXN' | 'USD';
 
+export type ParkingType = 'nearby' | 'private' | 'street';
+export type ParkingVehicleSize = 'compact' | 'sedan' | 'suv' | 'pickup' | 'van';
+export type BathroomType = 'full' | 'half' | 'shared';
+export type RoomType = 'single' | 'double' | 'shared';
+export type ContractUnit = 'dia' | 'semana' | 'mes' | 'anio';
+
 export type NearbyPlaceType =
   | 'supermercado'
   | 'escuela'
@@ -68,14 +74,25 @@ export interface Property {
   pricePeriod: PricePeriod;
   maintenanceIncluded: boolean;
   depositText: string;
+  depositMonths?: number;
   minimumContractText: string;
+  minimumContractQuantity?: number;
+  minimumContractUnit?: ContractUnit;
   availableFrom: string;
   bedrooms: number;
   bathrooms: number;
   parkingSpaces: number;
+  parkingTypes?: ParkingType[];
+  parkingVehicleSize?: ParkingVehicleSize;
   areaM2?: number;
   furnished: boolean;
   petsAllowed: boolean;
+  bathroomTypes?: BathroomType[];
+  roomTypes?: RoomType[];
+  peoplePerRoom?: number;
+  sharedRooms?: number;
+  isSharedProperty?: boolean;
+  sharedPeopleCount?: number;
   featureTags: string[];
   servicesIncluded: string[];
   amenities: string[];
@@ -109,6 +126,39 @@ export const PRICE_PERIOD_LABELS: Record<PricePeriod, string> = {
   monthly: 'mensual',
   weekly: 'semanal',
   daily: 'diaria'
+};
+
+export const CONTRACT_UNIT_LABELS: Record<ContractUnit, string> = {
+  dia: 'día',
+  semana: 'semana',
+  mes: 'mes',
+  anio: 'año'
+};
+
+export const PARKING_TYPE_LABELS: Record<ParkingType, string> = {
+  nearby: 'Cuenta con estacionamiento cerca',
+  private: 'Tiene cajón de estacionamiento',
+  street: 'Estacionamiento en vía pública'
+};
+
+export const PARKING_VEHICLE_SIZE_LABELS: Record<ParkingVehicleSize, string> = {
+  compact: 'Compacto',
+  sedan: 'Sedán',
+  suv: 'SUV',
+  pickup: 'Camioneta',
+  van: 'Van'
+};
+
+export const BATHROOM_TYPE_LABELS: Record<BathroomType, string> = {
+  full: 'Baño completo',
+  half: 'Medio baño',
+  shared: 'Baño compartido'
+};
+
+export const ROOM_TYPE_LABELS: Record<RoomType, string> = {
+  single: 'Recámara para 1 persona',
+  double: 'Recámara para 2 personas',
+  shared: 'Recámara compartida'
 };
 
 export const NEARBY_PLACE_TYPE_LABELS: Record<NearbyPlaceType, string> = {
@@ -152,14 +202,25 @@ export function createEmptyProperty(): Property {
     pricePeriod: 'monthly',
     maintenanceIncluded: false,
     depositText: '',
+    depositMonths: undefined,
     minimumContractText: '',
+    minimumContractQuantity: undefined,
+    minimumContractUnit: 'mes',
     availableFrom: '',
     bedrooms: 0,
     bathrooms: 0,
     parkingSpaces: 0,
+    parkingTypes: [],
+    parkingVehicleSize: undefined,
     areaM2: undefined,
     furnished: false,
     petsAllowed: false,
+    bathroomTypes: [],
+    roomTypes: [],
+    peoplePerRoom: undefined,
+    sharedRooms: undefined,
+    isSharedProperty: false,
+    sharedPeopleCount: undefined,
     featureTags: [],
     servicesIncluded: [],
     amenities: [],
