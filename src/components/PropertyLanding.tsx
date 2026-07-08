@@ -7,6 +7,7 @@ import {
   Camera,
   Car,
   CheckCircle2,
+  ExternalLink,
   FileText,
   GraduationCap,
   Hospital,
@@ -303,7 +304,10 @@ function SideDetailGroup({
 function PropertyMap({ property, isPreview }: { property: Property; isPreview: boolean }) {
   const hasCoordinates = typeof property.location.lat === 'number' && typeof property.location.lng === 'number';
   const canShowExactMap = hasCoordinates && property.location.showExactAddress;
-  const locationLabel = formatLocationShort(property) || 'Ubicación de la propiedad';
+  const googleMapsUrl = property.location.googleMapsUrl?.trim() ?? '';
+  const addressLabel = property.location.address.trim();
+  const locationLabel = formatLocationShort(property) || addressLabel || 'Ubicación de la propiedad';
+  const publicLocationText = property.location.showExactAddress && addressLabel ? addressLabel : locationLabel;
 
   const mapUrl = useMemo(() => {
     if (!canShowExactMap || typeof property.location.lat !== 'number' || typeof property.location.lng !== 'number') return '';
@@ -318,20 +322,30 @@ function PropertyMap({ property, isPreview }: { property: Property; isPreview: b
     return (
       <div className="property-map">
         <iframe title={`Mapa de ${locationLabel}`} src={mapUrl} loading="lazy" />
+        {googleMapsUrl && (
+          <a className="map-link" href={googleMapsUrl} target="_blank" rel="noreferrer">
+            <ExternalLink size={16} /> Abrir en Google Maps
+          </a>
+        )}
       </div>
     );
   }
 
-  if (!hasCoordinates && !isPreview && !locationLabel.trim()) return null;
+  if (!hasCoordinates && !googleMapsUrl && !isPreview && !locationLabel.trim()) return null;
 
   return (
     <div className="property-map property-map-placeholder" aria-label="Mapa aproximado de la propiedad">
       <div className="map-grid-bg" aria-hidden="true" />
       <span className="map-pin"><MapPin size={22} /></span>
       <div className="map-copy">
-        <strong>{hasCoordinates ? 'Mapa aproximado' : 'Zona de la propiedad'}</strong>
-        <span>{locationLabel}</span>
-        <small>{hasCoordinates ? 'El domicilio exacto no está publicado.' : 'Agrega coordenadas para mostrar un mapa más preciso.'}</small>
+        <strong>{property.location.showExactAddress && addressLabel ? 'Domicilio cargado' : 'Zona de la propiedad'}</strong>
+        <span>{publicLocationText}</span>
+        <small>{property.location.showExactAddress && addressLabel ? 'Este es el domicilio proporcionado por el anunciante.' : 'El domicilio exacto no está publicado.'}</small>
+        {googleMapsUrl && (
+          <a className="map-link" href={googleMapsUrl} target="_blank" rel="noreferrer">
+            <ExternalLink size={16} /> Abrir ubicación en Google Maps
+          </a>
+        )}
       </div>
     </div>
   );
