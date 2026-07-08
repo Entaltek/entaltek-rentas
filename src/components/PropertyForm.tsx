@@ -118,10 +118,6 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     updateField(key, event.target.value as never);
   }
 
-  function toggleArrayValue<T extends string>(values: T[], value: T): T[] {
-    return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
-  }
-
   function scrollToPublishSection() {
     document.getElementById('publish-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -348,7 +344,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       icon: <ListChecks size={18} />,
       title: 'Características y requisitos',
       subtitle: 'Datos duros, etiquetas, documentos y requisitos.',
-      isComplete: property.areaM2 || property.bedrooms > 0 || property.bathrooms > 0 || featureTags.length > 0 || amenities.length > 0,
+      isComplete: Boolean(property.areaM2 || property.bedrooms > 0 || property.bathrooms > 0 || featureTags.length > 0 || amenities.length > 0),
       recommendations: [
         !property.areaM2 && 'Agrega metros cuadrados si los conoces.',
         !featureTags.length && 'Agrega etiquetas dinámicas como amueblado, acepta mascotas, roof garden o vigilancia.',
