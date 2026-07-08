@@ -103,15 +103,21 @@ export function PropertyForm({ property, onChange, footer }: Props) {
   }
 
   function updateDeposit(months: number) {
-    updateField('depositMonths', months || undefined);
-    updateField('depositText', months ? `${months} ${months === 1 ? 'mes' : 'meses'} de depósito` : '');
+    onChange({
+      ...property,
+      depositMonths: months || undefined,
+      depositText: months ? `${months} ${months === 1 ? 'mes' : 'meses'} de depósito` : ''
+    });
   }
 
   function updateContract(quantity: number, unit: ContractUnit = property.minimumContractUnit ?? 'mes') {
     const label = CONTRACT_UNIT_LABELS[unit];
-    updateField('minimumContractQuantity', quantity || undefined);
-    updateField('minimumContractUnit', unit);
-    updateField('minimumContractText', quantity ? `Contrato mínimo de ${quantity} ${label}${quantity === 1 ? '' : 's'}` : '');
+    onChange({
+      ...property,
+      minimumContractQuantity: quantity || undefined,
+      minimumContractUnit: unit,
+      minimumContractText: quantity ? `Contrato mínimo de ${quantity} ${label}${quantity === 1 ? '' : 's'}` : ''
+    });
   }
 
   function handleText(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, key: keyof Property) {
