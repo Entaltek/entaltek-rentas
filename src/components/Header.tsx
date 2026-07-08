@@ -16,10 +16,10 @@ export function Header({ variant = 'app' }: Props) {
       </a>
       {variant === 'app' && (
         <nav aria-label="Secciones del sitio">
-          <a href="/#uso">Cómo se usa</a>
+          <a href="/#como-funciona">Cómo se usa</a>
           <a href="/#ejemplo">Publicación demo</a>
           <a href="/#faq">FAQ</a>
-          <a href="/crear" className="nav-cta">Generar landing</a>
+          <a href="/crear" className="nav-cta">Crear mi propiedad</a>
         </nav>
       )}
     </header>
