@@ -117,7 +117,8 @@ function normalizeDistance(value: string): { text: string; meters?: number } {
 
   const isKm = ['km', 'kilometros', 'kilómetros', 'kilometro', 'kilómetro'].includes(unit);
   const meters = Math.round(isKm ? amount * 1000 : amount);
-  const text = isKm ? `${amount:g} km` : `${meters} m`;
+  const formattedAmount = Number.isInteger(amount) ? String(amount) : amount.toFixed(1).replace(/\.0$/, '');
+  const text = isKm ? `${formattedAmount} km` : `${meters} m`;
 
-  return { text: text.replace(':g', ''), meters };
+  return { text, meters };
 }
