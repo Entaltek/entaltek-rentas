@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
 import type {
   BathroomType,
@@ -9,6 +9,7 @@ import type {
   PricePeriod,
   Property,
   PropertyLocation,
+  PropertyRoomDetail,
   PropertyType,
   RoomType
 } from '../types/property';
@@ -56,6 +57,7 @@ const STATE_CITY_OPTIONS: Record<string, string[]> = {
 
 export function PropertyForm({ property, onChange, footer }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const formStartRef = useRef<HTMLDivElement>(null);
   const featureTags = property.featureTags ?? [];
   const servicesIncluded = property.servicesIncluded ?? [];
   const amenities = property.amenities ?? [];
@@ -65,6 +67,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
   const bathroomTypes = property.bathroomTypes ?? [];
   const roomTypes = property.roomTypes ?? [];
   const cityOptions = STATE_CITY_OPTIONS[property.location.state] ?? [];
+  const hasBathroomDetails = Boolean((property.fullBathrooms ?? 0) + (property.halfBathrooms ?? 0) + (property.sharedBathrooms ?? 0));
 
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
     onChange({ ...property, [key]: value });
@@ -120,8 +123,42 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     });
   }
 
+  function updateBathroomCount(key: 'fullBathrooms' | 'halfBathrooms' | 'sharedBathrooms', value: number) {
+    const next = {
+      fullBathrooms: key === 'fullBathrooms' ? value : property.fullBathrooms ?? 0,
+      halfBathrooms: key === 'halfBathrooms' ? value : property.halfBathrooms ?? 0,
+      sharedBathrooms: key === 'sharedBathrooms' ? value : property.sharedBathrooms ?? 0
+    };
+    const totalBathrooms = next.fullBathrooms + next.halfBathrooms + next.sharedBathrooms;
+
+    onChange({
+      ...property,
+      ...next,
+      bathrooms: totalBathrooms
+    });
+  }
+
+  function updateBedroomCount(value: number) {
+    onChange({
+      ...property,
+      bedrooms: value,
+      roomDetails: normalizeRoomDetails(value, property.roomDetails ?? [])
+    });
+  }
+
   function handleText(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, key: keyof Property) {
     updateField(key, event.target.value as never);
+  }
+
+  function scrollToStepTop() {
+    window.setTimeout(() => {
+      formStartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }
+
+  function goToStep(index: number) {
+    setActiveStep(index);
+    scrollToStepTop();
   }
 
   function scrollToPublishSection() {
@@ -350,17 +387,19 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       icon: <ListChecks size={18} />,
       title: 'Características y requisitos',
       subtitle: 'Datos duros, etiquetas, documentos y requisitos.',
-      isComplete: Boolean(property.areaM2 || property.bedrooms > 0 || property.bathrooms > 0 || featureTags.length > 0 || amenities.length > 0),
+      isComplete: Boolean(property.areaM2 || property.bedrooms > 0 || hasBathroomDetails || featureTags.length > 0 || amenities.length > 0),
       recommendations: [
         !property.areaM2 && 'Agrega metros cuadrados si los conoces.',
+        !property.bedrooms && 'Indica cuántas recámaras o cuartos tiene la propiedad.',
+        !hasBathroomDetails && 'Especifica cuántos baños completos, medios baños y baños compartidos hay.',
         !featureTags.length && 'Agrega etiquetas dinámicas como amueblado, acepta mascotas, roof garden o vigilancia.',
         !amenities.length && 'Agrega al menos una amenidad o beneficio.'
       ].filter(Boolean) as string[],
       content: (
         <>
           <label className={ok(property.bedrooms > 0)}>
-            Recámaras
-            <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('bedrooms', safeNumber(event.target.value))} />
+            Recámaras / cuartos
+            <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateBedroomCount(safeNumber(event.target.value))} />
           </label>
           <label className={ok(Boolean(property.areaM2 && property.areaM2 > 0))}>
             Metros cuadrados
@@ -371,8 +410,17 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               onChange={(event) => updateField('areaM2', event.target.value ? safeNumber(event.target.value) : undefined)}
             />
           </label>
+          {property.bedrooms > 1 && (
+            <div className="full">
+              <RoomDetailsEditor
+                count={property.bedrooms}
+                rooms={property.roomDetails ?? []}
+                onChange={(roomDetails) => updateField('roomDetails', roomDetails)}
+              />
+            </div>
+          )}
           <CheckboxGroup
-            label="Tipo de recámara"
+            label="Tipo general de recámara"
             options={ROOM_OPTIONS}
             values={roomTypes}
             onChange={(next) => updateField('roomTypes', next)}
@@ -399,16 +447,27 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               <input value={property.sharedPeopleCount ?? ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('sharedPeopleCount', event.target.value ? safeNumber(event.target.value) : undefined)} />
             </label>
           )}
+          <fieldset className="bathroom-counts full">
+            <legend>Baños</legend>
+            <label className={ok(Boolean(property.fullBathrooms))}>
+              Baños completos
+              <input value={property.fullBathrooms ?? ''} inputMode="numeric" placeholder="1" onChange={(event) => updateBathroomCount('fullBathrooms', safeNumber(event.target.value))} />
+            </label>
+            <label className={ok(Boolean(property.halfBathrooms))}>
+              Medios baños
+              <input value={property.halfBathrooms ?? ''} inputMode="numeric" placeholder="0" onChange={(event) => updateBathroomCount('halfBathrooms', safeNumber(event.target.value))} />
+            </label>
+            <label className={ok(Boolean(property.sharedBathrooms))}>
+              Baños compartidos
+              <input value={property.sharedBathrooms ?? ''} inputMode="numeric" placeholder="0" onChange={(event) => updateBathroomCount('sharedBathrooms', safeNumber(event.target.value))} />
+            </label>
+          </fieldset>
           <CheckboxGroup
-            label="Baños"
+            label="Tipo general de baño"
             options={BATHROOM_OPTIONS}
             values={bathroomTypes}
             onChange={(next) => updateField('bathroomTypes', next)}
           />
-          <label className={ok(property.bathrooms > 0)}>
-            Número de baños
-            <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
-          </label>
           <CheckboxGroup
             label="Estacionamiento"
             options={PARKING_OPTIONS}
@@ -514,7 +573,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
         </>
       )
     }
-  ], [property, featureTags, servicesIncluded, amenities, requirements, requiredDocuments, parkingTypes, bathroomTypes, roomTypes, cityOptions]);
+  ], [property, featureTags, servicesIncluded, amenities, requirements, requiredDocuments, parkingTypes, bathroomTypes, roomTypes, cityOptions, hasBathroomDetails]);
 
   const currentStep = steps[activeStep];
   const isFirstStep = activeStep === 0;
@@ -528,14 +587,14 @@ export function PropertyForm({ property, onChange, footer }: Props) {
 
   return (
     <form className="property-form" onSubmit={(event) => event.preventDefault()}>
-      <div className="form-wizard">
+      <div className="form-wizard" ref={formStartRef}>
         <div className="form-wizard-steps" aria-label="Secciones del formulario">
           {steps.map((step, index) => (
             <button
               key={step.id}
               type="button"
               className={`wizard-step ${index === activeStep ? 'is-active' : ''} ${step.isComplete ? 'is-complete' : 'is-missing'}`}
-              onClick={() => canGoToStep(index) && setActiveStep(index)}
+              onClick={() => canGoToStep(index) && goToStep(index)}
               disabled={!canGoToStep(index)}
             >
               <span className="wizard-step-index">{step.isComplete ? <CheckCircle2 size={15} /> : index + 1}</span>
@@ -549,7 +608,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
         <div className="form-step-toolbar">
           <span className="step-counter">Paso {activeStep + 1} de {steps.length}</span>
           <div className="form-step-actions">
-            <button type="button" className="secondary-button" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={isFirstStep}>
+            <button type="button" className="secondary-button" onClick={() => goToStep(Math.max(0, activeStep - 1))} disabled={isFirstStep}>
               <ChevronLeft size={17} /> Anterior
             </button>
             {isLastStep ? (
@@ -557,7 +616,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
                 Revisar y publicar <ChevronRight size={17} />
               </button>
             ) : (
-              <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))} disabled={!currentStep.isComplete}>
+              <button type="button" className="primary-button" onClick={() => goToStep(Math.min(steps.length - 1, activeStep + 1))} disabled={!currentStep.isComplete}>
                 Siguiente <ChevronRight size={17} />
               </button>
             )}
@@ -600,6 +659,21 @@ function vehicleIcon(value: ParkingVehicleSize): string {
   return icons[value];
 }
 
+function normalizeRoomDetails(count: number, rooms: PropertyRoomDetail[]): PropertyRoomDetail[] {
+  if (count <= 0) return [];
+
+  return Array.from({ length: count }, (_, index) => {
+    const existing = rooms[index];
+    return {
+      id: existing?.id ?? `room-${index + 1}`,
+      label: existing?.label ?? `Cuarto ${index + 1}`,
+      capacity: existing?.capacity ?? 1,
+      hasPrivateBathroom: existing?.hasPrivateBathroom ?? false,
+      isShared: existing?.isShared ?? false
+    };
+  });
+}
+
 function CheckboxGroup<T extends string>({
   label,
   options,
@@ -620,6 +694,52 @@ function CheckboxGroup<T extends string>({
             <input type="checkbox" checked={values.includes(value)} onChange={() => onChange(values.includes(value) ? values.filter((item) => item !== value) : [...values, value])} />
             {optionLabel}
           </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function RoomDetailsEditor({ count, rooms, onChange }: { count: number; rooms: PropertyRoomDetail[]; onChange: (rooms: PropertyRoomDetail[]) => void }) {
+  const normalizedRooms = normalizeRoomDetails(count, rooms);
+
+  function updateRoom(index: number, changes: Partial<PropertyRoomDetail>) {
+    const nextRooms = normalizedRooms.map((room, roomIndex) => (
+      roomIndex === index ? { ...room, ...changes } : room
+    ));
+    onChange(nextRooms);
+  }
+
+  return (
+    <fieldset className="room-details-editor">
+      <legend>Detalle por cuarto</legend>
+      <p className="field-help">Como tienes más de un cuarto, especifica capacidad y si cada uno tiene baño propio.</p>
+      <div className="room-detail-list">
+        {normalizedRooms.map((room, index) => (
+          <div className="room-detail-card" key={room.id}>
+            <label>
+              Nombre del cuarto
+              <input value={room.label} onChange={(event) => updateRoom(index, { label: event.target.value })} />
+            </label>
+            <label>
+              Capacidad
+              <select value={room.capacity} onChange={(event) => updateRoom(index, { capacity: safeNumber(event.target.value) || 1 })}>
+                <option value={1}>Para 1 persona</option>
+                <option value={2}>Para 2 personas</option>
+                <option value={3}>Para 3 personas</option>
+                <option value={4}>Para 4 personas</option>
+                <option value={5}>Para más de 4 personas</option>
+              </select>
+            </label>
+            <label className="toggle-label">
+              <input type="checkbox" checked={room.hasPrivateBathroom} onChange={(event) => updateRoom(index, { hasPrivateBathroom: event.target.checked })} />
+              Tiene baño propio
+            </label>
+            <label className="toggle-label">
+              <input type="checkbox" checked={room.isShared} onChange={(event) => updateRoom(index, { isShared: event.target.checked })} />
+              Es cuarto compartido
+            </label>
+          </div>
         ))}
       </div>
     </fieldset>
