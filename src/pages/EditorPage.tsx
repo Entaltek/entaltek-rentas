@@ -60,6 +60,7 @@ export function EditorPage() {
 
   const validation = useMemo(() => validateForPublish(property), [property]);
   const progressItems = useMemo(() => getEditorProgressItems(property), [property]);
+  const isEditorComplete = progressItems.every((item) => item.complete);
   const isBusy = saveStatus === 'saving' || saveStatus === 'publishing';
   const isPublished = property.status === 'published';
   const publicUrl = isPublished && property.slug ? `${window.location.origin}/r/${property.slug}` : '';
@@ -214,11 +215,13 @@ export function EditorPage() {
                 />
               }
             />
-            <MarketplaceCopy
-              property={property}
-              sectionId="copy"
-              onCopied={() => pushToast('success', 'Texto copiado al portapapeles.')}
-            />
+            {isEditorComplete && (
+              <MarketplaceCopy
+                property={property}
+                sectionId="copy"
+                onCopied={() => pushToast('success', 'Texto copiado al portapapeles.')}
+              />
+            )}
           </div>
 
           <aside className={`editor-preview-col ${isPreviewOpen ? 'is-open' : ''}`}>
