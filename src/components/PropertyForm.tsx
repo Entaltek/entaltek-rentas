@@ -44,16 +44,24 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     onChange({ ...property, location: { ...property.location, [key]: value } });
   }
 
+  function updateGoogleMapsUrl(value: string) {
+    const coordinates = extractGoogleMapsCoordinates(value);
+    onChange({
+      ...property,
+      location: {
+        ...property.location,
+        googleMapsUrl: value,
+        ...(coordinates ? { lat: coordinates.lat, lng: coordinates.lng } : {})
+      }
+    });
+  }
+
   function updateContact(key: 'name' | 'whatsapp', value: string) {
     onChange({ ...property, contact: { ...property.contact, [key]: value } });
   }
 
   function handleText(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, key: keyof Property) {
     updateField(key, event.target.value as never);
-  }
-
-  function numberOrUndefined(value: string) {
-    return value ? safeNumber(value) : undefined;
   }
 
   function scrollToPublishSection() {
@@ -172,7 +180,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       id: 'ubicacion',
       icon: <MapPin size={18} />,
       title: 'Ubicación y mapa',
-      subtitle: 'Tú decides cuánto detalle mostrar públicamente.',
+      subtitle: 'Pega tu ubicación de Google Maps y decide qué mostrar públicamente.',
       isComplete: property.location.city.trim().length > 0 && property.location.state.trim().length > 0 && property.location.neighborhood.trim().length > 0,
       content: (
         <>
@@ -192,13 +200,14 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             Domicilio exacto
             <input value={property.location.address} placeholder="Calle, número, colonia" onChange={(event) => updateLocation('address', event.target.value)} />
           </label>
-          <label>
-            Latitud del mapa
-            <input value={property.location.lat ?? ''} inputMode="decimal" placeholder="21.1619" onChange={(event) => updateLocation('lat', numberOrUndefined(event.target.value))} />
-          </label>
-          <label>
-            Longitud del mapa
-            <input value={property.location.lng ?? ''} inputMode="decimal" placeholder="-101.6863" onChange={(event) => updateLocation('lng', numberOrUndefined(event.target.value))} />
+          <label className={`full ${ok(Boolean(property.location.googleMapsUrl?.trim()))}`}>
+            Link de Google Maps
+            <input
+              value={property.location.googleMapsUrl ?? ''}
+              placeholder="Pega aquí la ubicación copiada desde Google Maps"
+              onChange={(event) => updateGoogleMapsUrl(event.target.value)}
+            />
+            <small className="field-help">Puedes copiar el link desde Google Maps. Si el link trae coordenadas, las guardamos automáticamente sin mostrar campos técnicos.</small>
           </label>
           <div className="toggle-row full">
             <label className="toggle-label">
@@ -211,7 +220,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             </label>
           </div>
           <p className="form-note full">
-            Si capturas coordenadas pero no muestras el domicilio exacto, la landing mostrará un mapa aproximado para cuidar la privacidad.
+            La landing mostrará el domicilio cargado si activas esta opción. Si no, se mostrará solo la zona para cuidar la privacidad.
           </p>
           <label className={`full ${ok(property.location.references.trim().length > 0)}`}>
             Referencias de ubicación
@@ -387,6 +396,19 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       </div>
     </form>
   );
+}
+
+function extractGoogleMapsCoordinates(value: string): { lat: number; lng: number } | null {
+  const atMatch = value.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (atMatch) return { lat: Number(atMatch[1]), lng: Number(atMatch[2]) };
+
+  const bangMatch = value.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if (bangMatch) return { lat: Number(bangMatch[1]), lng: Number(bangMatch[2]) };
+
+  const queryMatch = value.match(/[?&]q=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  if (queryMatch) return { lat: Number(queryMatch[1]), lng: Number(queryMatch[2]) };
+
+  return null;
 }
 
 function TagTextarea({
