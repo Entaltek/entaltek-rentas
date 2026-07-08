@@ -75,15 +75,18 @@ export interface Property {
   areaM2?: number;
   furnished: boolean;
   petsAllowed: boolean;
+  featureTags: string[];
   servicesIncluded: string[];
   amenities: string[];
   requirements: string[];
+  requiredDocuments: string[];
   location: PropertyLocation;
   contact: PropertyContact;
   photos: PropertyPhoto[];
   createdAt: string;
   updatedAt: string;
   publishedAt?: string;
+  expiresAt?: string;
 }
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -155,9 +158,11 @@ export function createEmptyProperty(): Property {
     areaM2: undefined,
     furnished: false,
     petsAllowed: false,
+    featureTags: [],
     servicesIncluded: [],
     amenities: [],
     requirements: [],
+    requiredDocuments: [],
     location: createEmptyLocation(),
     contact: { name: '', whatsapp: '' },
     photos: [],
