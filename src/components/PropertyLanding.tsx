@@ -217,79 +217,43 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
               )}
             </section>
           )}
-
-          {conditions.length > 0 && (
-            <section className="landing-block">
-              <h2>Condiciones de {property.operationType === 'venta' ? 'venta' : 'renta'}</h2>
-              <ul className="check-list">
-                {conditions.map((item) => (
-                  <li key={item}><CheckCircle2 size={18} /> {item}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {amenities.length > 0 && (
-            <section className="landing-block">
-              <h2>Amenidades</h2>
-              <ul className="pill-list">
-                {amenities.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </section>
-          )}
-
-          {servicesIncluded.length > 0 && (
-            <section className="landing-block">
-              <h2>Servicios incluidos</h2>
-              <ul className="pill-list">
-                {servicesIncluded.map((item) => <li key={item}>{item}</li>)}
-              </ul>
-            </section>
-          )}
-
-          {requiredDocuments.length > 0 && (
-            <section className="landing-block">
-              <h2>Documentos requeridos</h2>
-              <ul className="check-list document-list">
-                {requiredDocuments.map((item) => (
-                  <li key={item}><FileText size={18} /> {item}</li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {requirements.length > 0 && (
-            <section className="landing-block">
-              <h2>Requisitos</h2>
-              <ul className="check-list">
-                {requirements.map((item) => (
-                  <li key={item}><CheckCircle2 size={18} /> {item}</li>
-                ))}
-              </ul>
-            </section>
-          )}
         </div>
 
-        <aside className="contact-card">
-          <span>{formatPricePeriod(property)}</span>
-          <strong>{property.price > 0 ? formatPrice(property) : isPreview ? '$ —' : 'Precio a tratar'}</strong>
-          {conditions.length > 0 && (
-            <ul className="contact-terms">
-              {conditions.map((item) => <li key={item}>{item}</li>)}
-            </ul>
-          )}
-          {whatsappReady ? (
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="primary-button whatsapp-button">
-              <MessageCircle size={18} /> Contactar por WhatsApp
-            </a>
-          ) : (
-            isPreview && <p className="contact-missing">Agrega un WhatsApp de contacto para activar el botón.</p>
-          )}
-          {property.contact.name && <p className="contact-name">Te atiende: {property.contact.name}</p>}
-          <small>Información proporcionada por el anunciante. Verifica la propiedad antes de realizar cualquier pago.</small>
-          <small className="expiry-note">
-            Esta publicación se elimina automáticamente después de 30 días{expirationLabel ? ` (vence el ${expirationLabel})` : ''}.
-          </small>
+        <aside className="property-side" aria-label="Contacto y detalles de renta">
+          <div className="contact-card">
+            <span>{formatPricePeriod(property)}</span>
+            <strong>{property.price > 0 ? formatPrice(property) : isPreview ? '$ —' : 'Precio a tratar'}</strong>
+            {conditions.length > 0 && (
+              <ul className="contact-terms">
+                {conditions.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            )}
+            {whatsappReady ? (
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="primary-button whatsapp-button">
+                <MessageCircle size={18} /> Contactar por WhatsApp
+              </a>
+            ) : (
+              isPreview && <p className="contact-missing">Agrega un WhatsApp de contacto para activar el botón.</p>
+            )}
+            {property.contact.name && <p className="contact-name">Te atiende: {property.contact.name}</p>}
+            <small>Información proporcionada por el anunciante. Verifica la propiedad antes de realizar cualquier pago.</small>
+            <small className="expiry-note">
+              Esta publicación se elimina automáticamente después de 30 días{expirationLabel ? ` (vence el ${expirationLabel})` : ''}.
+            </small>
+          </div>
+
+          <div className="side-details-grid">
+            <SideDetailGroup
+              title={`Condiciones de ${property.operationType === 'venta' ? 'venta' : 'renta'}`}
+              items={conditions}
+              icon={<CheckCircle2 size={16} />}
+              variant="check"
+            />
+            <SideDetailGroup title="Amenidades" items={amenities} variant="pills" />
+            <SideDetailGroup title="Servicios incluidos" items={servicesIncluded} variant="pills" />
+            <SideDetailGroup title="Documentos requeridos" items={requiredDocuments} icon={<FileText size={16} />} variant="check" />
+            <SideDetailGroup title="Requisitos" items={requirements} icon={<CheckCircle2 size={16} />} variant="check" />
+          </div>
         </aside>
       </section>
 
@@ -305,6 +269,34 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
         </div>
       )}
     </article>
+  );
+}
+
+function SideDetailGroup({
+  title,
+  items,
+  icon,
+  variant
+}: {
+  title: string;
+  items: string[];
+  icon?: ReactNode;
+  variant: 'check' | 'pills';
+}) {
+  if (!items.length) return null;
+
+  return (
+    <section className="side-detail-card">
+      <h2>{title}</h2>
+      <ul className={variant === 'pills' ? 'side-pill-list' : 'side-check-list'}>
+        {items.map((item) => (
+          <li key={item}>
+            {variant === 'check' && (icon ?? <CheckCircle2 size={16} />)}
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
