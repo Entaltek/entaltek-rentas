@@ -12,6 +12,7 @@ interface Props {
 }
 
 type PageStatus = 'loading' | 'success' | 'not-found' | 'unpublished' | 'expired' | 'error';
+const PUBLICATION_DURATION_DAYS = 30;
 
 export function PublicPropertyPage({ slug }: Props) {
   const [property, setProperty] = useState<Property | null>(null);
@@ -104,8 +105,16 @@ export function PublicPropertyPage({ slug }: Props) {
 }
 
 function isExpired(property: Property): boolean {
-  if (property.status !== 'published' || !property.expiresAt) return false;
-  return new Date(property.expiresAt).getTime() <= Date.now();
+  if (property.status !== 'published') return false;
+  const expirationSource = property.expiresAt ?? (property.publishedAt ? getExpirationDate(property.publishedAt) : '');
+  if (!expirationSource) return false;
+  return new Date(expirationSource).getTime() <= Date.now();
+}
+
+function getExpirationDate(fromIso: string): string {
+  const date = new Date(fromIso);
+  date.setDate(date.getDate() + PUBLICATION_DURATION_DAYS);
+  return date.toISOString();
 }
 
 function EmptyState({
