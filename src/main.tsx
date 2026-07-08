@@ -4,6 +4,7 @@ import { EditorPage } from './pages/EditorPage';
 import { HomePage } from './pages/HomePage';
 import { PublicPropertyPage } from './pages/PublicPropertyPage';
 import './styles.css';
+import './layout-overrides.css';
 
 function App() {
   const path = window.location.pathname;
