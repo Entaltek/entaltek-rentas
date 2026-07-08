@@ -1,0 +1,385 @@
+/* UX overrides loaded after the base layout. */
+
+/* Galería agrupada: 1 imagen principal + 2 secundarias + carrete compacto. */
+.property-card .hero-grid {
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.82fr);
+  height: clamp(400px, 38vw, 640px);
+}
+
+.property-card.is-preview .hero-grid,
+.preview-frame .hero-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(220px, 0.78fr);
+  height: clamp(330px, 30vw, 500px);
+}
+
+.gallery-column {
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+
+.gallery-column .gallery-thumb:nth-child(n + 3) {
+  display: none;
+}
+
+.hero-summary-card {
+  position: absolute;
+  left: clamp(14px, 2vw, 26px);
+  right: clamp(14px, 2vw, 26px);
+  bottom: clamp(14px, 2vw, 26px);
+  z-index: 2;
+  max-width: 560px;
+  padding: clamp(14px, 2.2vw, 22px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  box-shadow: 0 18px 44px rgba(1, 55, 98, 0.18);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(14px) saturate(1.25);
+}
+
+.hero-summary-card .eyebrow {
+  margin: 4px 0 2px;
+  color: var(--blue);
+  font-size: 13px;
+}
+
+.hero-summary-card h1 {
+  margin: 4px 0 6px;
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.hero-summary-card p {
+  margin: 8px 0 0;
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.hero-summary-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tech);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hero-space-chip {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.preview-frame .hero-summary-card {
+  max-width: min(430px, calc(100% - 28px));
+  padding: 14px;
+}
+
+.preview-frame .hero-summary-card h1 {
+  font-size: clamp(22px, 2vw, 32px);
+}
+
+.preview-frame .hero-summary-card p {
+  -webkit-line-clamp: 1;
+}
+
+.photo-reel {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 12px 14px;
+  background: white;
+  scrollbar-width: thin;
+}
+
+.photo-reel-item {
+  position: relative;
+  display: grid;
+  min-width: 126px;
+  max-width: 160px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--tech);
+  cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.photo-reel-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(1, 121, 177, 0.45);
+  box-shadow: var(--shadow-soft);
+}
+
+.photo-reel-item.is-active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(71, 218, 214, 0.16);
+}
+
+.photo-reel-item img {
+  width: 100%;
+  height: 76px;
+  object-fit: cover;
+}
+
+.photo-reel-item span {
+  overflow: hidden;
+  padding: 7px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-frame .photo-reel {
+  gap: 8px;
+  padding-bottom: 10px;
+}
+
+.preview-frame .photo-reel-item {
+  min-width: 102px;
+}
+
+.preview-frame .photo-reel-item img {
+  height: 58px;
+}
+
+/* En el preview compacto se prioriza la lectura y se evita que la galería rompa el layout. */
+.preview-frame .property-content {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding: 24px;
+}
+
+.preview-frame .contact-card {
+  position: static;
+}
+
+.preview-frame .property-title-card {
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+.preview-frame .feature-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+/* Inputs de etiquetas por comas. */
+.inline-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 4px 0 0;
+  list-style: none;
+}
+
+.inline-tag-list li {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(71, 218, 214, 0.16);
+  color: var(--tech);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.document-list li svg,
+.expiry-note {
+  color: var(--tech);
+}
+
+.expiry-note {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.public-link-banner p {
+  display: grid;
+  align-items: center;
+}
+
+.public-link-banner p small {
+  margin-left: 25px;
+  color: var(--success);
+  font-size: 13px;
+  opacity: 0.86;
+}
+
+/* Acciones finales del formulario. */
+.form-wizard-footer {
+  margin-top: 4px;
+}
+
+.form-publish-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid rgba(1, 121, 177, 0.2);
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, rgba(71, 218, 214, 0.13), rgba(1, 55, 98, 0.05));
+}
+
+.form-publish-card h2 {
+  margin: 4px 0 6px;
+  color: var(--navy);
+  font-size: 24px;
+}
+
+.form-publish-card p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+}
+
+.form-publish-actions,
+.preview-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-publish-actions .primary-button,
+.form-publish-actions .secondary-button {
+  min-height: 42px;
+}
+
+.preview-toolbar {
+  align-items: center;
+}
+
+.preview-toolbar-actions .secondary-button {
+  min-height: 38px;
+  padding: 8px 14px;
+}
+
+/* Vista previa en pantalla completa. */
+.preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  padding: clamp(12px, 2vw, 28px);
+  background: rgba(1, 19, 34, 0.72);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.preview-modal-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1560px, 100%);
+  max-height: 100%;
+  margin: auto;
+  overflow: hidden;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.preview-modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.preview-modal-toolbar p {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--tech);
+  font-weight: 800;
+}
+
+.preview-modal-content {
+  overflow: auto;
+  padding: 0 16px 18px;
+}
+
+.preview-modal-content .property-card {
+  margin: 18px auto 0;
+}
+
+@media (max-width: 1280px) {
+  .property-card .hero-grid,
+  .property-card.is-preview .hero-grid,
+  .preview-frame .hero-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .gallery-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .gallery-thumb {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-summary-card {
+    position: static;
+    max-width: none;
+    margin: 10px;
+  }
+
+  .hero-figure {
+    display: grid;
+  }
+
+  .hero-figure img {
+    min-height: 280px;
+  }
+
+  .gallery-thumb {
+    min-height: 130px;
+  }
+
+  .preview-toolbar-actions,
+  .form-publish-actions {
+    width: 100%;
+  }
+
+  .preview-toolbar-actions .secondary-button,
+  .form-publish-actions .secondary-button,
+  .form-publish-actions .primary-button {
+    width: 100%;
+  }
+
+  .preview-modal {
+    padding: 0;
+  }
+
+  .preview-modal-shell {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .preview-modal-content {
+    padding: 0 10px 18px;
+  }
+}
