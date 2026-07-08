@@ -82,7 +82,7 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
 
   const features = [
     property.bedrooms > 0 && { icon: <BedDouble size={18} />, label: `${property.bedrooms} recámara${property.bedrooms === 1 ? '' : 's'}` },
-    property.bathrooms > 0 && { icon: <Bath size={18} />, label: `${property.bathrooms} baño${property.bathrooms === 1 ? '' : 's'}` },
+    property.bathrooms > 0 && { icon: <Bath size={18} />, label: `${property.bathrooms} baño${property.bathrooms === 1 ? '' : 's'} en total` },
     property.parkingSpaces > 0 && { icon: <Car size={18} />, label: `${property.parkingSpaces} lugar${property.parkingSpaces === 1 ? '' : 'es'} de estacionamiento` },
     Boolean(property.areaM2) && { icon: <Ruler size={18} />, label: `${property.areaM2} m²` },
     property.furnished && { icon: <Sofa size={18} />, label: 'Amueblado' },
@@ -327,8 +327,16 @@ function buildParkingDetails(property: Property): string[] {
 }
 
 function buildRoomDetails(property: Property): string[] {
+  const perRoomDetails = (property.roomDetails ?? []).map((room) => {
+    const capacity = room.capacity >= 5 ? 'para más de 4 personas' : `para ${room.capacity} persona${room.capacity === 1 ? '' : 's'}`;
+    const bathroom = room.hasPrivateBathroom ? 'con baño propio' : 'sin baño propio';
+    const shared = room.isShared ? 'cuarto compartido' : 'cuarto privado';
+    return `${room.label}: ${capacity}, ${bathroom}, ${shared}`;
+  });
+
   return [
     ...(property.roomTypes ?? []).map((type) => ROOM_TYPE_LABELS[type]),
+    ...perRoomDetails,
     property.peoplePerRoom ? `${property.peoplePerRoom} persona${property.peoplePerRoom === 1 ? '' : 's'} por recámara` : '',
     property.sharedRooms ? `${property.sharedRooms} cuarto${property.sharedRooms === 1 ? '' : 's'} compartido${property.sharedRooms === 1 ? '' : 's'}` : '',
     property.isSharedProperty && property.sharedPeopleCount ? `Se comparte con ${property.sharedPeopleCount} persona${property.sharedPeopleCount === 1 ? '' : 's'}` : ''
@@ -336,7 +344,13 @@ function buildRoomDetails(property: Property): string[] {
 }
 
 function buildBathroomDetails(property: Property): string[] {
-  return (property.bathroomTypes ?? []).map((type) => BATHROOM_TYPE_LABELS[type]);
+  const countDetails = [
+    property.fullBathrooms ? `${property.fullBathrooms} baño${property.fullBathrooms === 1 ? '' : 's'} completo${property.fullBathrooms === 1 ? '' : 's'}` : '',
+    property.halfBathrooms ? `${property.halfBathrooms} medio baño${property.halfBathrooms === 1 ? '' : 's'}` : '',
+    property.sharedBathrooms ? `${property.sharedBathrooms} baño${property.sharedBathrooms === 1 ? '' : 's'} compartido${property.sharedBathrooms === 1 ? '' : 's'}` : ''
+  ].filter(Boolean);
+
+  return countDetails.length ? countDetails : (property.bathroomTypes ?? []).map((type) => BATHROOM_TYPE_LABELS[type]);
 }
 
 function PropertyMap({ property, isPreview }: { property: Property; isPreview: boolean }) {
