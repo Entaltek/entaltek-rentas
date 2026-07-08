@@ -104,38 +104,35 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
   return (
     <article className={`property-card ${isPreview ? 'is-preview' : ''}`} id={sectionId}>
       {(photos.length > 0 || isPreview) && (
-        <>
-          <section className={`hero-grid ${photos.length ? '' : 'empty-gallery'} ${visibleSecondaryPhotos.length ? '' : 'single-photo'} ${showPhotoReel ? 'has-reel' : ''}`}>
-            {activePhoto ? (
-              <figure className="hero-figure" key={activePhoto.id}>
-                <img src={activePhoto.url} alt={activePhoto.alt || activePhoto.title || `Foto principal de ${property.title}`} className="hero-image" />
-                {activePhoto.title && <figcaption className="photo-overlay main-photo-label">{activePhoto.title}</figcaption>}
-              </figure>
-            ) : (
-              <div className="image-placeholder hero-image">
-                <Camera size={34} />
-                <strong>Aquí van tus fotos</strong>
-                <span>Sube fotos en el editor y esta galería se arma sola.</span>
-              </div>
-            )}
-            {visibleSecondaryPhotos.length > 0 && (
-              <div className="gallery-column">
-                {visibleSecondaryPhotos.map((photo) => (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    className="gallery-thumb"
-                    onClick={() => setActivePhotoId(photo.id)}
-                    aria-label={`Ver foto: ${photo.title || 'de la propiedad'}`}
-                  >
-                    <img src={photo.url} alt={photo.alt || photo.title || `Foto de ${property.title}`} loading="lazy" />
-                    {photo.title && <span className="photo-overlay">{photo.title}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
+        <section className={`hero-grid ${photos.length ? '' : 'empty-gallery'} ${visibleSecondaryPhotos.length ? '' : 'single-photo'} ${showPhotoReel ? 'has-reel' : ''}`}>
+          {activePhoto ? (
+            <figure className="hero-figure" key={activePhoto.id}>
+              <img src={activePhoto.url} alt={activePhoto.alt || activePhoto.title || `Foto principal de ${property.title}`} className="hero-image" />
+              {activePhoto.title && <figcaption className="photo-overlay main-photo-label">{activePhoto.title}</figcaption>}
+            </figure>
+          ) : (
+            <div className="image-placeholder hero-image">
+              <Camera size={34} />
+              <strong>Aquí van tus fotos</strong>
+              <span>Sube fotos en el editor y esta galería se arma sola.</span>
+            </div>
+          )}
+          {visibleSecondaryPhotos.length > 0 && (
+            <div className="gallery-column">
+              {visibleSecondaryPhotos.map((photo) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  className="gallery-thumb"
+                  onClick={() => setActivePhotoId(photo.id)}
+                  aria-label={`Ver foto: ${photo.title || 'de la propiedad'}`}
+                >
+                  <img src={photo.url} alt={photo.alt || photo.title || `Foto de ${property.title}`} loading="lazy" />
+                  {photo.title && <span className="photo-overlay">{photo.title}</span>}
+                </button>
+              ))}
+            </div>
+          )}
           {showPhotoReel && (
             <div className="photo-reel" aria-label="Más fotos de la propiedad">
               {photos.map((photo, index) => (
@@ -152,7 +149,7 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
               ))}
             </div>
           )}
-        </>
+        </section>
       )}
 
       {photos.length > 1 && (
