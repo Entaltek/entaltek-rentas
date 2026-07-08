@@ -1,0 +1,17 @@
+.home-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-page .intro { order: 1; }
+.home-page .smart-tour-spotlight { order: 2; }
+.home-page .problem-strip { order: 3; }
+.home-page .example-section { order: 4; }
+.home-page .how-section { order: 5; }
+.home-page .includes-section { order: 6; }
+.home-page .final-cta { order: 7; }
+
+.smart-tour-spotlight {
+  padding-top: 10px;
+  padding-bottom: 26px;
+}
