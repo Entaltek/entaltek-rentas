@@ -1,0 +1,346 @@
+/* Refinamientos del flujo de publicación y microinteracciones. */
+
+/* Home: recorrido inteligente compacto debajo de los beneficios del hero. */
+.smart-tour-spotlight.is-compact {
+  padding: 18px 0 0;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-card {
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(1, 55, 98, 0.1);
+}
+
+.smart-tour-spotlight.is-compact .spotlight-header {
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-title strong {
+  font-size: 18px;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-title p {
+  max-width: 60ch;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-announcement::before {
+  display: none;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-detail {
+  grid-template-columns: 1fr;
+}
+
+.smart-tour-spotlight.is-compact .spotlight-card.is-open .spotlight-detail {
+  max-height: 620px;
+}
+
+/* Cards de información ordenada con movimiento sutil. */
+.include-row {
+  position: relative;
+  transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+}
+
+.include-row::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  opacity: 0;
+  background: linear-gradient(180deg, var(--blue), var(--cyan));
+  transition: opacity 0.22s ease;
+}
+
+.include-row:hover {
+  z-index: 1;
+  transform: translateX(6px);
+  background: rgba(71, 218, 214, 0.09);
+  box-shadow: 0 12px 30px rgba(1, 55, 98, 0.08);
+}
+
+.include-row:hover::before {
+  opacity: 1;
+}
+
+/* FAQ animado. */
+.faq-item {
+  overflow: hidden;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(1, 121, 177, 0.28);
+  box-shadow: var(--shadow-soft);
+}
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.28s ease, opacity 0.24s ease;
+}
+
+.faq-answer > p {
+  overflow: hidden;
+  margin: 0;
+  padding: 0 20px 0 48px;
+  color: var(--muted);
+  transition: padding 0.28s ease;
+}
+
+.faq-item[open] .faq-answer {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.faq-item[open] .faq-answer > p {
+  padding-bottom: 20px;
+}
+
+/* Editor: barra de avance más ancha y menos invasiva. */
+.editor-heading-main {
+  flex: 1 1 560px;
+}
+
+.editor-status-row {
+  width: 100%;
+}
+
+.completeness.is-wide {
+  flex: 1 1 50%;
+  min-width: min(520px, 100%);
+}
+
+.completeness.is-wide .completeness-bar {
+  width: min(680px, 100%);
+  height: 10px;
+}
+
+/* Navegación superior del formulario. */
+.form-step-toolbar {
+  position: sticky;
+  top: 74px;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 14px 0 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(1, 121, 177, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  backdrop-filter: blur(12px) saturate(1.08);
+  box-shadow: 0 10px 28px rgba(1, 55, 98, 0.08);
+}
+
+.step-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--tech);
+  font-weight: 900;
+}
+
+.step-counter::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 0 5px rgba(71, 218, 214, 0.16);
+}
+
+.form-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form-wizard-actions {
+  display: none;
+}
+
+/* Animación de transición entre secciones. */
+@keyframes form-step-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.form-step-transition {
+  animation: form-step-in 0.28s ease both;
+}
+
+/* Recomendaciones por paso. */
+.step-recommendations {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(138, 31, 17, 0.18);
+  border-radius: 16px;
+  background: rgba(255, 96, 72, 0.08);
+  color: var(--danger);
+}
+
+.step-recommendations strong {
+  color: var(--danger);
+}
+
+.step-recommendations ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.step-recommendations li {
+  margin: 3px 0;
+}
+
+.step-recommendations.is-complete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: rgba(14, 122, 78, 0.28);
+  background: rgba(14, 122, 78, 0.12);
+  color: #075f3c;
+  font-weight: 800;
+}
+
+/* Contraste de pasos completos/faltantes. */
+.wizard-step.is-complete {
+  border-color: rgba(14, 122, 78, 0.42);
+  background: rgba(14, 122, 78, 0.13);
+  color: #075f3c;
+}
+
+.wizard-step.is-complete .wizard-step-index {
+  background: #075f3c;
+  color: white;
+}
+
+.wizard-step.is-missing:not(.is-active) {
+  border-color: rgba(138, 31, 17, 0.22);
+  color: #8a1f11;
+}
+
+.wizard-step.is-missing:not(.is-active) .wizard-step-index {
+  background: rgba(255, 96, 72, 0.16);
+  color: #8a1f11;
+}
+
+.wizard-step:disabled {
+  opacity: 0.54;
+  cursor: not-allowed;
+}
+
+/* Campos compuestos. */
+.contract-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.45fr);
+  gap: 16px;
+}
+
+.checkbox-card-group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg);
+}
+
+.checkbox-card-group legend {
+  padding: 0 8px;
+  color: var(--tech);
+  font-weight: 900;
+}
+
+.checkbox-card-group > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.vehicle-size-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.vehicle-size-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+}
+
+.vehicle-size-card {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: white;
+  color: var(--tech);
+  cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.vehicle-size-card span {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.vehicle-size-card strong {
+  font-size: 13px;
+}
+
+.vehicle-size-card:hover,
+.vehicle-size-card.is-selected {
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  background: rgba(71, 218, 214, 0.12);
+  box-shadow: var(--shadow-soft);
+}
+
+.form-publish-card.is-ready {
+  border-color: rgba(14, 122, 78, 0.3);
+  background: linear-gradient(135deg, rgba(14, 122, 78, 0.12), rgba(71, 218, 214, 0.11));
+}
+
+.public-link-banner small {
+  max-width: 720px;
+}
+
+@media (max-width: 900px) {
+  .form-step-toolbar {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-step-actions {
+    width: 100%;
+  }
+
+  .form-step-actions .primary-button,
+  .form-step-actions .secondary-button {
+    flex: 1;
+  }
+
+  .contract-field {
+    grid-template-columns: 1fr;
+  }
+}

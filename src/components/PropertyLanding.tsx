@@ -19,10 +19,19 @@ import {
   Sofa,
   Store,
   Trees,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Users
 } from 'lucide-react';
 import type { NearbyPlaceType, Property } from '../types/property';
-import { NEARBY_PLACE_TYPE_LABELS, OPERATION_TYPE_LABELS, PROPERTY_TYPE_LABELS } from '../types/property';
+import {
+  BATHROOM_TYPE_LABELS,
+  NEARBY_PLACE_TYPE_LABELS,
+  OPERATION_TYPE_LABELS,
+  PARKING_TYPE_LABELS,
+  PARKING_VEHICLE_SIZE_LABELS,
+  PROPERTY_TYPE_LABELS,
+  ROOM_TYPE_LABELS
+} from '../types/property';
 import { buildWhatsappUrl, formatLocationShort, formatPrice, formatPricePeriod, hasValidWhatsapp } from '../lib/format';
 import { sortPhotos } from '../lib/photos';
 
@@ -67,15 +76,22 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
   const requirements = property.requirements ?? [];
   const requiredDocuments = property.requiredDocuments ?? [];
   const expirationLabel = formatExpirationDate(property.expiresAt);
+  const parkingDetails = buildParkingDetails(property);
+  const roomDetails = buildRoomDetails(property);
+  const bathroomDetails = buildBathroomDetails(property);
 
   const features = [
     property.bedrooms > 0 && { icon: <BedDouble size={18} />, label: `${property.bedrooms} recámara${property.bedrooms === 1 ? '' : 's'}` },
     property.bathrooms > 0 && { icon: <Bath size={18} />, label: `${property.bathrooms} baño${property.bathrooms === 1 ? '' : 's'}` },
-    property.parkingSpaces > 0 && { icon: <Car size={18} />, label: `${property.parkingSpaces} estacionamiento${property.parkingSpaces === 1 ? '' : 's'}` },
+    property.parkingSpaces > 0 && { icon: <Car size={18} />, label: `${property.parkingSpaces} lugar${property.parkingSpaces === 1 ? '' : 'es'} de estacionamiento` },
     Boolean(property.areaM2) && { icon: <Ruler size={18} />, label: `${property.areaM2} m²` },
     property.furnished && { icon: <Sofa size={18} />, label: 'Amueblado' },
     property.petsAllowed && { icon: <PawPrint size={18} />, label: 'Acepta mascotas' },
     Boolean(property.availableFrom.trim()) && { icon: <CalendarDays size={18} />, label: `Disponible: ${property.availableFrom}` },
+    property.isSharedProperty && { icon: <Users size={18} />, label: property.sharedPeopleCount ? `Propiedad compartida con ${property.sharedPeopleCount} persona${property.sharedPeopleCount === 1 ? '' : 's'}` : 'Propiedad compartida' },
+    ...parkingDetails.map((detail) => ({ icon: <Car size={18} />, label: detail })),
+    ...roomDetails.map((detail) => ({ icon: <BedDouble size={18} />, label: detail })),
+    ...bathroomDetails.map((detail) => ({ icon: <Bath size={18} />, label: detail })),
     ...featureTags.map((tag) => ({ icon: <CheckCircle2 size={18} />, label: tag }))
   ].filter(Boolean) as { icon: ReactNode; label: string }[];
 
@@ -250,6 +266,8 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
               icon={<CheckCircle2 size={16} />}
               variant="check"
             />
+            <SideDetailGroup title="Distribución" items={[...roomDetails, ...bathroomDetails]} icon={<CheckCircle2 size={16} />} variant="check" />
+            <SideDetailGroup title="Estacionamiento" items={parkingDetails} icon={<Car size={16} />} variant="check" />
             <SideDetailGroup title="Amenidades" items={amenities} variant="pills" />
             <SideDetailGroup title="Servicios incluidos" items={servicesIncluded} variant="pills" />
             <SideDetailGroup title="Documentos requeridos" items={requiredDocuments} icon={<FileText size={16} />} variant="check" />
@@ -299,6 +317,26 @@ function SideDetailGroup({
       </ul>
     </section>
   );
+}
+
+function buildParkingDetails(property: Property): string[] {
+  return [
+    ...(property.parkingTypes ?? []).map((type) => PARKING_TYPE_LABELS[type]),
+    property.parkingVehicleSize ? `Tamaño aproximado: ${PARKING_VEHICLE_SIZE_LABELS[property.parkingVehicleSize]}` : ''
+  ].filter(Boolean);
+}
+
+function buildRoomDetails(property: Property): string[] {
+  return [
+    ...(property.roomTypes ?? []).map((type) => ROOM_TYPE_LABELS[type]),
+    property.peoplePerRoom ? `${property.peoplePerRoom} persona${property.peoplePerRoom === 1 ? '' : 's'} por recámara` : '',
+    property.sharedRooms ? `${property.sharedRooms} cuarto${property.sharedRooms === 1 ? '' : 's'} compartido${property.sharedRooms === 1 ? '' : 's'}` : '',
+    property.isSharedProperty && property.sharedPeopleCount ? `Se comparte con ${property.sharedPeopleCount} persona${property.sharedPeopleCount === 1 ? '' : 's'}` : ''
+  ].filter(Boolean) as string[];
+}
+
+function buildBathroomDetails(property: Property): string[] {
+  return (property.bathroomTypes ?? []).map((type) => BATHROOM_TYPE_LABELS[type]);
 }
 
 function PropertyMap({ property, isPreview }: { property: Property; isPreview: boolean }) {

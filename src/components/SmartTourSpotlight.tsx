@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { ChevronDown, Layers, Megaphone, Rotate3D, Route, ScanEye } from 'lucide-react';
 
+interface Props {
+  compact?: boolean;
+}
+
 // Anuncio destacado del home para la feature futura "Recorrido inteligente".
 // Solo comunica que vendrá pronto; la captura/publicación actual no depende de esto.
-export function SmartTourSpotlight() {
+export function SmartTourSpotlight({ compact = false }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section className="smart-tour-spotlight" id="recorrido-inteligente" aria-label="Anuncio de capacidad próxima">
+    <section className={`smart-tour-spotlight ${compact ? 'is-compact' : ''}`} id="recorrido-inteligente" aria-label="Anuncio de capacidad próxima">
       <button
         type="button"
         className={`spotlight-card spotlight-announcement ${isOpen ? 'is-open' : ''}`}
@@ -15,7 +19,7 @@ export function SmartTourSpotlight() {
         aria-expanded={isOpen}
       >
         <div className="spotlight-header">
-          <div className="spotlight-icon"><Megaphone size={26} /></div>
+          <div className="spotlight-icon"><Megaphone size={compact ? 20 : 26} /></div>
           <div className="spotlight-title">
             <div>
               <span className="badge-soon">Próximamente</span>
@@ -23,7 +27,7 @@ export function SmartTourSpotlight() {
             </div>
             <p>
               Estamos preparando una función para transformar fotos o video en una experiencia visual más
-              completa. Hoy puedes publicar tu landing; pronto podrás enriquecerla con recorrido, vista 360 y
+              completa. Hoy puedes publicar tu página; pronto podrás enriquecerla con recorrido, vista 360 y
               apoyo visual para entender mejor cada espacio.
             </p>
           </div>
@@ -47,7 +51,7 @@ export function SmartTourSpotlight() {
             <span>Una narrativa visual del inmueble: entrada, áreas comunes, recámaras y servicios.</span>
           </div>
         </div>
-        <span className="announcement-watermark"><Rotate3D size={72} /></span>
+        <span className="announcement-watermark"><Rotate3D size={compact ? 48 : 72} /></span>
       </button>
     </section>
   );

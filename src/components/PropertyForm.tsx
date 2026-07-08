@@ -1,13 +1,26 @@
-import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
 import type {
+  BathroomType,
+  ContractUnit,
   OperationType,
+  ParkingType,
+  ParkingVehicleSize,
   PricePeriod,
   Property,
   PropertyLocation,
-  PropertyType
+  PropertyType,
+  RoomType
 } from '../types/property';
-import { OPERATION_TYPE_LABELS, PROPERTY_TYPE_LABELS } from '../types/property';
+import {
+  BATHROOM_TYPE_LABELS,
+  CONTRACT_UNIT_LABELS,
+  OPERATION_TYPE_LABELS,
+  PARKING_TYPE_LABELS,
+  PARKING_VEHICLE_SIZE_LABELS,
+  PROPERTY_TYPE_LABELS,
+  ROOM_TYPE_LABELS
+} from '../types/property';
 import { hasValidWhatsapp } from '../lib/format';
 import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
 import { NearbyPlacesEditor } from './NearbyPlacesEditor';
@@ -27,6 +40,19 @@ const PRICE_PERIOD_OPTIONS: { value: PricePeriod; label: string }[] = [
   { value: 'weekly', label: 'Semanal' },
   { value: 'daily', label: 'Diaria' }
 ];
+const CONTRACT_UNITS = Object.entries(CONTRACT_UNIT_LABELS) as [ContractUnit, string][];
+const PARKING_OPTIONS = Object.entries(PARKING_TYPE_LABELS) as [ParkingType, string][];
+const PARKING_SIZE_OPTIONS = Object.entries(PARKING_VEHICLE_SIZE_LABELS) as [ParkingVehicleSize, string][];
+const BATHROOM_OPTIONS = Object.entries(BATHROOM_TYPE_LABELS) as [BathroomType, string][];
+const ROOM_OPTIONS = Object.entries(ROOM_TYPE_LABELS) as [RoomType, string][];
+
+const STATE_CITY_OPTIONS: Record<string, string[]> = {
+  'Guanajuato': ['León', 'Irapuato', 'Celaya', 'Salamanca', 'Guanajuato', 'Silao'],
+  'Querétaro': ['Santiago de Querétaro', 'El Marqués', 'Corregidora', 'San Juan del Río'],
+  'Jalisco': ['Guadalajara', 'Zapopan', 'Tlaquepaque', 'Tonalá', 'Puerto Vallarta'],
+  'Ciudad de México': ['Benito Juárez', 'Cuauhtémoc', 'Miguel Hidalgo', 'Coyoacán', 'Álvaro Obregón'],
+  'Nuevo León': ['Monterrey', 'San Pedro Garza García', 'San Nicolás de los Garza', 'Guadalupe']
+};
 
 export function PropertyForm({ property, onChange, footer }: Props) {
   const [activeStep, setActiveStep] = useState(0);
@@ -35,6 +61,10 @@ export function PropertyForm({ property, onChange, footer }: Props) {
   const amenities = property.amenities ?? [];
   const requirements = property.requirements ?? [];
   const requiredDocuments = property.requiredDocuments ?? [];
+  const parkingTypes = property.parkingTypes ?? [];
+  const bathroomTypes = property.bathroomTypes ?? [];
+  const roomTypes = property.roomTypes ?? [];
+  const cityOptions = STATE_CITY_OPTIONS[property.location.state] ?? [];
 
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
     onChange({ ...property, [key]: value });
@@ -42,6 +72,18 @@ export function PropertyForm({ property, onChange, footer }: Props) {
 
   function updateLocation<K extends keyof PropertyLocation>(key: K, value: PropertyLocation[K]) {
     onChange({ ...property, location: { ...property.location, [key]: value } });
+  }
+
+  function updateState(value: string) {
+    const cities = STATE_CITY_OPTIONS[value] ?? [];
+    onChange({
+      ...property,
+      location: {
+        ...property.location,
+        state: value,
+        city: cities.includes(property.location.city) ? property.location.city : ''
+      }
+    });
   }
 
   function updateGoogleMapsUrl(value: string) {
@@ -60,6 +102,18 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     onChange({ ...property, contact: { ...property.contact, [key]: value } });
   }
 
+  function updateDeposit(months: number) {
+    updateField('depositMonths', months || undefined);
+    updateField('depositText', months ? `${months} ${months === 1 ? 'mes' : 'meses'} de depósito` : '');
+  }
+
+  function updateContract(quantity: number, unit: ContractUnit = property.minimumContractUnit ?? 'mes') {
+    const label = CONTRACT_UNIT_LABELS[unit];
+    updateField('minimumContractQuantity', quantity || undefined);
+    updateField('minimumContractUnit', unit);
+    updateField('minimumContractText', quantity ? `Contrato mínimo de ${quantity} ${label}${quantity === 1 ? '' : 's'}` : '');
+  }
+
   function handleText(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, key: keyof Property) {
     updateField(key, event.target.value as never);
   }
@@ -71,13 +125,17 @@ export function PropertyForm({ property, onChange, footer }: Props) {
   // Marca visual de campo completo: palomita verde dentro del input.
   const ok = (valid: boolean) => (valid ? 'is-valid' : '');
 
-  const steps = [
+  const steps = useMemo(() => [
     {
       id: 'principal',
       icon: <Home size={18} />,
       title: 'Información principal',
       subtitle: 'Lo primero que verá un interesado.',
       isComplete: property.title.trim().length >= 5 && property.description.trim().length >= 30,
+      recommendations: [
+        property.title.trim().length < 5 && 'Escribe un título claro con tipo de propiedad y zona.',
+        property.description.trim().length < 30 && 'Agrega una descripción corta: estado del inmueble, beneficios y para quién es ideal.'
+      ].filter(Boolean) as string[],
       content: (
         <>
           <label className={`full ${ok(property.title.trim().length >= 5)}`}>
@@ -120,7 +178,13 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       icon: <Wallet size={18} />,
       title: 'Precio y condiciones',
       subtitle: 'Un precio claro filtra mejor a los interesados.',
-      isComplete: property.price > 0 && property.depositText.trim().length > 0 && property.minimumContractText.trim().length > 0,
+      isComplete: property.price > 0 && property.depositText.trim().length > 0 && property.minimumContractText.trim().length > 0 && property.availableFrom.trim().length > 0,
+      recommendations: [
+        !(property.price > 0) && 'Indica un precio claro para evitar preguntas repetidas.',
+        !property.availableFrom.trim() && 'Selecciona la fecha de disponibilidad.',
+        !property.depositText.trim() && 'Elige cuántos meses de depósito se solicitan.',
+        !property.minimumContractText.trim() && 'Define el contrato mínimo con cantidad y unidad.'
+      ].filter(Boolean) as string[],
       content: (
         <>
           <label className={ok(property.price > 0)}>
@@ -148,17 +212,37 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             </select>
           </label>
           <label className={ok(property.availableFrom.trim().length > 0)}>
-            Disponible desde
-            <input value={property.availableFrom} placeholder="Inmediata, 1 de agosto..." onChange={(event) => handleText(event, 'availableFrom')} />
+            Fecha de disponibilidad
+            <input type="date" value={property.availableFrom} onChange={(event) => updateField('availableFrom', event.target.value)} />
           </label>
           <label className={ok(property.depositText.trim().length > 0)}>
             Depósito
-            <input value={property.depositText} placeholder="Ej. 1 mes de depósito" onChange={(event) => handleText(event, 'depositText')} />
+            <select value={property.depositMonths ?? ''} onChange={(event) => updateDeposit(safeNumber(event.target.value))}>
+              <option value="">Selecciona depósito</option>
+              {Array.from({ length: 12 }, (_, index) => index + 1).map((month) => (
+                <option key={month} value={month}>{month} {month === 1 ? 'mes' : 'meses'}</option>
+              ))}
+            </select>
           </label>
-          <label className={ok(property.minimumContractText.trim().length > 0)}>
-            Contrato mínimo
-            <input value={property.minimumContractText} placeholder="Ej. Contrato mínimo de 12 meses" onChange={(event) => handleText(event, 'minimumContractText')} />
-          </label>
+          <div className="contract-field full">
+            <label className={ok(Boolean(property.minimumContractQuantity))}>
+              Contrato mínimo
+              <input
+                value={property.minimumContractQuantity ?? ''}
+                inputMode="numeric"
+                placeholder="Ej. 1"
+                onChange={(event) => updateContract(safeNumber(event.target.value), property.minimumContractUnit ?? 'mes')}
+              />
+            </label>
+            <label>
+              Unidad
+              <select value={property.minimumContractUnit ?? 'mes'} onChange={(event) => updateContract(property.minimumContractQuantity ?? 1, event.target.value as ContractUnit)}>
+                {CONTRACT_UNITS.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="toggle-row full">
             <label className="toggle-label">
               <input type="checkbox" checked={property.maintenanceIncluded} onChange={(event) => updateField('maintenanceIncluded', event.target.checked)} />
@@ -181,16 +265,32 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       icon: <MapPin size={18} />,
       title: 'Ubicación y mapa',
       subtitle: 'Pega tu ubicación de Google Maps y decide qué mostrar públicamente.',
-      isComplete: property.location.city.trim().length > 0 && property.location.state.trim().length > 0 && property.location.neighborhood.trim().length > 0,
+      isComplete: property.location.state.trim().length > 0 && property.location.city.trim().length > 0 && property.location.neighborhood.trim().length > 0,
+      recommendations: [
+        !property.location.state.trim() && 'Selecciona o escribe el estado.',
+        !property.location.city.trim() && 'Selecciona o escribe la ciudad.',
+        !property.location.neighborhood.trim() && 'Agrega la colonia o zona.',
+        !property.location.googleMapsUrl?.trim() && 'Pega un link de Google Maps para ayudar a ubicar mejor la propiedad.'
+      ].filter(Boolean) as string[],
       content: (
         <>
-          <label className={ok(property.location.city.trim().length > 0)}>
-            Ciudad
-            <input value={property.location.city} placeholder="León" onChange={(event) => updateLocation('city', event.target.value)} />
-          </label>
           <label className={ok(property.location.state.trim().length > 0)}>
             Estado
-            <input value={property.location.state} placeholder="Guanajuato" onChange={(event) => updateLocation('state', event.target.value)} />
+            <input list="state-options" value={property.location.state} placeholder="Guanajuato" onChange={(event) => updateState(event.target.value)} />
+            <datalist id="state-options">
+              {Object.keys(STATE_CITY_OPTIONS).map((state) => <option key={state} value={state} />)}
+            </datalist>
+          </label>
+          <label className={ok(property.location.city.trim().length > 0)}>
+            Ciudad
+            {cityOptions.length > 0 ? (
+              <select value={property.location.city} onChange={(event) => updateLocation('city', event.target.value)}>
+                <option value="">Selecciona ciudad</option>
+                {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+              </select>
+            ) : (
+              <input value={property.location.city} placeholder="León" onChange={(event) => updateLocation('city', event.target.value)} />
+            )}
           </label>
           <label className={ok(property.location.neighborhood.trim().length > 0)}>
             Colonia / zona
@@ -207,7 +307,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               placeholder="Pega aquí la ubicación copiada desde Google Maps"
               onChange={(event) => updateGoogleMapsUrl(event.target.value)}
             />
-            <small className="field-help">Puedes copiar el link desde Google Maps. Si el link trae coordenadas, las guardamos automáticamente sin mostrar campos técnicos.</small>
+            <small className="field-help">Puedes copiar el link desde Google Maps. Si el link trae coordenadas, las guardamos automáticamente.</small>
           </label>
           <div className="toggle-row full">
             <label className="toggle-label">
@@ -220,7 +320,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             </label>
           </div>
           <p className="form-note full">
-            La landing mostrará el domicilio cargado si activas esta opción. Si no, se mostrará solo la zona para cuidar la privacidad.
+            Tu propiedad mostrará el domicilio cargado si activas esta opción. Si no, se mostrará solo la zona para cuidar la privacidad.
           </p>
           <label className={`full ${ok(property.location.references.trim().length > 0)}`}>
             Referencias de ubicación
@@ -244,20 +344,17 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       icon: <ListChecks size={18} />,
       title: 'Características y requisitos',
       subtitle: 'Datos duros, etiquetas, documentos y requisitos.',
-      isComplete: property.bedrooms > 0 && property.bathrooms > 0 && amenities.length > 0 && requirements.length > 0 && requiredDocuments.length > 0,
+      isComplete: Boolean(property.areaM2 || property.bedrooms > 0 || property.bathrooms > 0 || featureTags.length > 0 || amenities.length > 0),
+      recommendations: [
+        !property.areaM2 && 'Agrega metros cuadrados si los conoces.',
+        !featureTags.length && 'Agrega etiquetas dinámicas como amueblado, acepta mascotas, roof garden o vigilancia.',
+        !amenities.length && 'Agrega al menos una amenidad o beneficio.'
+      ].filter(Boolean) as string[],
       content: (
         <>
           <label className={ok(property.bedrooms > 0)}>
             Recámaras
             <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('bedrooms', safeNumber(event.target.value))} />
-          </label>
-          <label className={ok(property.bathrooms > 0)}>
-            Baños
-            <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
-          </label>
-          <label className={ok(property.parkingSpaces > 0)}>
-            Estacionamientos
-            <input value={property.parkingSpaces || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('parkingSpaces', safeNumber(event.target.value))} />
           </label>
           <label className={ok(Boolean(property.areaM2 && property.areaM2 > 0))}>
             Metros cuadrados
@@ -268,21 +365,75 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               onChange={(event) => updateField('areaM2', event.target.value ? safeNumber(event.target.value) : undefined)}
             />
           </label>
+          <CheckboxGroup
+            label="Tipo de recámara"
+            options={ROOM_OPTIONS}
+            values={roomTypes}
+            onChange={(next) => updateField('roomTypes', next)}
+          />
+          <div className="contract-field full">
+            <label>
+              Personas por recámara
+              <input value={property.peoplePerRoom ?? ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('peoplePerRoom', event.target.value ? safeNumber(event.target.value) : undefined)} />
+            </label>
+            <label>
+              Cuartos compartidos
+              <input value={property.sharedRooms ?? ''} inputMode="numeric" placeholder="0" onChange={(event) => updateField('sharedRooms', event.target.value ? safeNumber(event.target.value) : undefined)} />
+            </label>
+          </div>
           <div className="toggle-row full">
             <label className="toggle-label">
-              <input type="checkbox" checked={property.furnished} onChange={(event) => updateField('furnished', event.target.checked)} />
-              Amueblado
+              <input type="checkbox" checked={Boolean(property.isSharedProperty)} onChange={(event) => updateField('isSharedProperty', event.target.checked)} />
+              ¿La propiedad es compartida?
             </label>
-            <label className="toggle-label">
-              <input type="checkbox" checked={property.petsAllowed} onChange={(event) => updateField('petsAllowed', event.target.checked)} />
-              Acepta mascotas
+          </div>
+          {property.isSharedProperty && (
+            <label>
+              ¿Con cuántas personas se comparte?
+              <input value={property.sharedPeopleCount ?? ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('sharedPeopleCount', event.target.value ? safeNumber(event.target.value) : undefined)} />
             </label>
+          )}
+          <CheckboxGroup
+            label="Baños"
+            options={BATHROOM_OPTIONS}
+            values={bathroomTypes}
+            onChange={(next) => updateField('bathroomTypes', next)}
+          />
+          <label className={ok(property.bathrooms > 0)}>
+            Número de baños
+            <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
+          </label>
+          <CheckboxGroup
+            label="Estacionamiento"
+            options={PARKING_OPTIONS}
+            values={parkingTypes}
+            onChange={(next) => updateField('parkingTypes', next)}
+          />
+          <label className={ok(property.parkingSpaces > 0)}>
+            Lugares de estacionamiento
+            <input value={property.parkingSpaces || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('parkingSpaces', safeNumber(event.target.value))} />
+          </label>
+          <div className="full vehicle-size-picker">
+            <p className="field-title">Tamaño aproximado del estacionamiento</p>
+            <div className="vehicle-size-grid">
+              {PARKING_SIZE_OPTIONS.map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`vehicle-size-card ${property.parkingVehicleSize === value ? 'is-selected' : ''}`}
+                  onClick={() => updateField('parkingVehicleSize', value)}
+                >
+                  <span aria-hidden="true">{vehicleIcon(value)}</span>
+                  <strong>{label}</strong>
+                </button>
+              ))}
+            </div>
           </div>
           <TagTextarea
             label="Características adicionales"
             value={featureTags}
-            placeholder="Vigilancia 24/7, roof garden, elevador, vista panorámica"
-            help="Úsalas para datos que no están en los botones anteriores."
+            placeholder="Amueblado, acepta mascotas, vigilancia 24/7, roof garden, elevador"
+            help="Agrega aquí etiquetas dinámicas. Úsalas para amenidades o reglas que no estén en los botones anteriores."
             valid={featureTags.length > 0}
             onChange={(items) => updateField('featureTags', items)}
           />
@@ -317,8 +468,12 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       id: 'fotos',
       icon: <ImageIcon size={18} />,
       title: 'Fotos',
-      subtitle: 'La primera foto o la marcada como portada abre la landing.',
+      subtitle: 'La primera foto o la marcada como portada abre la publicación.',
       isComplete: property.photos.length > 0,
+      recommendations: [
+        property.photos.length === 0 && 'Agrega fotos reales de sala, cocina, recámaras, baño y fachada.',
+        property.photos.length > 0 && property.photos.length < 4 && 'Agrega más fotos para que la propiedad se entienda mejor.'
+      ].filter(Boolean) as string[],
       content: (
         <>
           <div className="full">
@@ -336,6 +491,10 @@ export function PropertyForm({ property, onChange, footer }: Props) {
       title: 'Contacto',
       subtitle: 'A dónde llegan los interesados.',
       isComplete: property.contact.name.trim().length > 0 && hasValidWhatsapp(property.contact.whatsapp),
+      recommendations: [
+        !property.contact.name.trim() && 'Agrega el nombre de contacto.',
+        !hasValidWhatsapp(property.contact.whatsapp) && 'Agrega un WhatsApp válido con lada.'
+      ].filter(Boolean) as string[],
       content: (
         <>
           <label className={ok(property.contact.name.trim().length > 0)}>
@@ -349,11 +508,17 @@ export function PropertyForm({ property, onChange, footer }: Props) {
         </>
       )
     }
-  ];
+  ], [property, featureTags, servicesIncluded, amenities, requirements, requiredDocuments, parkingTypes, bathroomTypes, roomTypes, cityOptions]);
 
   const currentStep = steps[activeStep];
   const isFirstStep = activeStep === 0;
   const isLastStep = activeStep === steps.length - 1;
+  const isFormComplete = steps.every((step) => step.isComplete);
+
+  function canGoToStep(index: number) {
+    if (index <= activeStep) return true;
+    return steps.slice(0, index).every((step) => step.isComplete);
+  }
 
   return (
     <form className="property-form" onSubmit={(event) => event.preventDefault()}>
@@ -363,8 +528,9 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             <button
               key={step.id}
               type="button"
-              className={`wizard-step ${index === activeStep ? 'is-active' : ''} ${step.isComplete ? 'is-complete' : ''}`}
-              onClick={() => setActiveStep(index)}
+              className={`wizard-step ${index === activeStep ? 'is-active' : ''} ${step.isComplete ? 'is-complete' : 'is-missing'}`}
+              onClick={() => canGoToStep(index) && setActiveStep(index)}
+              disabled={!canGoToStep(index)}
             >
               <span className="wizard-step-index">{step.isComplete ? <CheckCircle2 size={15} /> : index + 1}</span>
               <span>{step.title}</span>
@@ -372,27 +538,33 @@ export function PropertyForm({ property, onChange, footer }: Props) {
           ))}
         </div>
 
-        <FormSection icon={currentStep.icon} title={currentStep.title} subtitle={currentStep.subtitle}>
-          {currentStep.content}
-        </FormSection>
+        <StepRecommendations recommendations={currentStep.recommendations} isComplete={currentStep.isComplete} />
 
-        <div className="form-wizard-actions">
-          <button type="button" className="secondary-button" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={isFirstStep}>
-            <ChevronLeft size={17} /> Anterior
-          </button>
-          <span>Paso {activeStep + 1} de {steps.length}</span>
-          {isLastStep ? (
-            <button type="button" className="primary-button" onClick={scrollToPublishSection}>
-              Revisar y publicar <ChevronRight size={17} />
+        <div className="form-step-toolbar">
+          <span className="step-counter">Paso {activeStep + 1} de {steps.length}</span>
+          <div className="form-step-actions">
+            <button type="button" className="secondary-button" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={isFirstStep}>
+              <ChevronLeft size={17} /> Anterior
             </button>
-          ) : (
-            <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))}>
-              Siguiente <ChevronRight size={17} />
-            </button>
-          )}
+            {isLastStep ? (
+              <button type="button" className="primary-button" onClick={scrollToPublishSection} disabled={!isFormComplete}>
+                Revisar y publicar <ChevronRight size={17} />
+              </button>
+            ) : (
+              <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))} disabled={!currentStep.isComplete}>
+                Siguiente <ChevronRight size={17} />
+              </button>
+            )}
+          </div>
         </div>
 
-        {footer && <div id="publish-section" className="form-wizard-footer">{footer}</div>}
+        <div className="form-step-transition" key={currentStep.id}>
+          <FormSection icon={currentStep.icon} title={currentStep.title} subtitle={currentStep.subtitle}>
+            {currentStep.content}
+          </FormSection>
+        </div>
+
+        {footer && isFormComplete && <div id="publish-section" className="form-wizard-footer">{footer}</div>}
       </div>
     </form>
   );
@@ -409,6 +581,65 @@ function extractGoogleMapsCoordinates(value: string): { lat: number; lng: number
   if (queryMatch) return { lat: Number(queryMatch[1]), lng: Number(queryMatch[2]) };
 
   return null;
+}
+
+function vehicleIcon(value: ParkingVehicleSize): string {
+  const icons: Record<ParkingVehicleSize, string> = {
+    compact: '🚗',
+    sedan: '🚘',
+    suv: '🚙',
+    pickup: '🛻',
+    van: '🚐'
+  };
+  return icons[value];
+}
+
+function CheckboxGroup<T extends string>({
+  label,
+  options,
+  values,
+  onChange
+}: {
+  label: string;
+  options: [T, string][];
+  values: T[];
+  onChange: (values: T[]) => void;
+}) {
+  return (
+    <fieldset className="checkbox-card-group full">
+      <legend>{label}</legend>
+      <div>
+        {options.map(([value, optionLabel]) => (
+          <label key={value} className="toggle-label">
+            <input type="checkbox" checked={values.includes(value)} onChange={() => onChange(values.includes(value) ? values.filter((item) => item !== value) : [...values, value])} />
+            {optionLabel}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function StepRecommendations({ recommendations, isComplete }: { recommendations: string[]; isComplete: boolean }) {
+  if (isComplete) {
+    return (
+      <div className="step-recommendations is-complete">
+        <CheckCircle2 size={18} />
+        <span>Esta sección está completa. Puedes avanzar al siguiente paso.</span>
+      </div>
+    );
+  }
+
+  if (!recommendations.length) return null;
+
+  return (
+    <div className="step-recommendations">
+      <strong>Mejoras recomendadas para esta sección</strong>
+      <ul>
+        {recommendations.map((recommendation) => <li key={recommendation}>{recommendation}</li>)}
+      </ul>
+    </div>
+  );
 }
 
 function TagTextarea({

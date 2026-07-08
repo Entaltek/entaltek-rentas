@@ -7,6 +7,7 @@ import './styles.css';
 import './layout-overrides.css';
 import './ux-overrides.css';
 import './home-polish.css';
+import './property-flow-polish.css';
 
 function App() {
   const path = window.location.pathname;

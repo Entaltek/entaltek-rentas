@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Header } from '../components/Header';
 import { SiteFooter } from '../components/SiteFooter';
-import { ListingQualityCard } from '../components/ListingQualityCard';
 import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
@@ -110,7 +109,7 @@ export function EditorPage() {
       const published = await publishProperty(saved.id);
       setProperty(published);
       setSaveStatus('saved');
-      pushToast('success', 'Propiedad publicada. Tu link estará activo durante 30 días.');
+      pushToast('success', 'Propiedad publicada. Guarda el link para compartirlo.');
       validation.warnings.forEach((warning) => pushToast('info', warning));
     } catch (error) {
       setSaveStatus('error');
@@ -148,16 +147,15 @@ export function EditorPage() {
       <Header />
       <main className="editor-page">
         <section className="editor-heading">
-          <div>
+          <div className="editor-heading-main">
             <p className="eyebrow">Editor de propiedad</p>
             <h1>{property.title.trim() || 'Nueva propiedad'}</h1>
             <div className="editor-status-row">
               <StatusPill status={property.status} saveStatus={saveStatus} />
-              <div className="completeness">
+              <div className="completeness is-wide" aria-label="Avance de información">
                 <div className="completeness-bar" role="progressbar" aria-valuenow={quality.score} aria-valuemin={0} aria-valuemax={100}>
                   <span style={{ width: `${quality.score}%` }} />
                 </div>
-                <span className="completeness-label">Tu publicación está al {quality.score}%</span>
               </div>
             </div>
           </div>
@@ -194,8 +192,8 @@ export function EditorPage() {
         {publicUrl && (
           <div className="public-link-banner">
             <p>
-              <Globe size={17} /> Tu landing está publicada: <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
-              <small>Se elimina automáticamente después de 30 días.</small>
+              <Globe size={17} /> Tu propiedad está publicada: <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
+              <small>Guarda este link para compartirlo. Si necesitas editar después, puedes generar una nueva versión o ponerte en contacto con nosotros.</small>
             </p>
             <button type="button" className="secondary-button" onClick={copyPublicLink}>
               <Link2 size={16} /> Copiar link
@@ -215,11 +213,9 @@ export function EditorPage() {
                   saveStatus={saveStatus}
                   onPublish={handlePublish}
                   onUnpublish={handleUnpublish}
-                  onOpenFullscreen={() => setIsFullscreenPreviewOpen(true)}
                 />
               }
             />
-            <ListingQualityCard property={property} />
             <MarketplaceCopy
               property={property}
               sectionId="copy"
@@ -282,30 +278,25 @@ function PublishFormFooter({
   isBusy,
   saveStatus,
   onPublish,
-  onUnpublish,
-  onOpenFullscreen
+  onUnpublish
 }: {
   isPublished: boolean;
   isBusy: boolean;
   saveStatus: SaveStatus;
   onPublish: () => void;
   onUnpublish: () => void;
-  onOpenFullscreen: () => void;
 }) {
   return (
-    <section className="form-publish-card" aria-label="Publicar propiedad">
+    <section className="form-publish-card is-ready" aria-label="Publicar propiedad">
       <div>
-        <p className="eyebrow">Último paso</p>
-        <h2>{isPublished ? 'Tu link ya está activo' : 'Publica y genera el link'}</h2>
+        <p className="eyebrow">Resumen de tu publicación de propiedad</p>
+        <h2>{isPublished ? 'Tu link ya está activo' : 'Ya puedes publicar tu propiedad'}</h2>
         <p>
-          La publicación queda disponible por 30 días y después se elimina automáticamente.
-          Puedes revisar la vista completa antes de compartirla.
+          Revisa que tus datos sean correctos. Al publicar, guarda el link para compartirlo con interesados.
+          Si después necesitas cambios, puedes generar una nueva publicación o ponerte en contacto con nosotros.
         </p>
       </div>
       <div className="form-publish-actions">
-        <button type="button" className="secondary-button" onClick={onOpenFullscreen}>
-          <Maximize2 size={17} /> Ver publicación completa
-        </button>
         {isPublished ? (
           <button type="button" className="secondary-button" onClick={onUnpublish} disabled={isBusy}>
             <EyeOff size={17} /> Despublicar

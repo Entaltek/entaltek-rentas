@@ -26,7 +26,7 @@ export function SiteFooter() {
         <section>
           <h2>Preguntas frecuentes</h2>
           <ul>
-            <li>¿Necesito cuenta? En el MVP puedes probar el editor directamente.</li>
+            <li>¿Necesito cuenta? Puedes probar el editor directamente.</li>
             <li>¿Puedo ocultar mi domicilio? Sí, decides si se muestra exacto o aproximado.</li>
             <li>¿Cada propiedad tiene link propio? Sí, cada publicación genera una URL única.</li>
           </ul>
@@ -36,7 +36,7 @@ export function SiteFooter() {
           <h2>Contacto</h2>
           <p>¿Quieres publicar o mejorar una renta?</p>
           <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`} target="_blank" rel="noreferrer">
-            WhatsApp: +52 464 159 1640
+            Ponte en contacto con nosotros vía WhatsApp
           </a>
           <p className="footer-warning">
             La información de cada propiedad es responsabilidad del anunciante. Verifica el inmueble antes de
