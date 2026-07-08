@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { EyeOff, RefreshCw, SearchX } from 'lucide-react';
+import { Clock, EyeOff, RefreshCw, SearchX } from 'lucide-react';
 import { Header } from '../components/Header';
 import { LandingSkeleton } from '../components/LandingSkeleton';
 import { PropertyLanding } from '../components/PropertyLanding';
@@ -11,7 +11,7 @@ interface Props {
   slug: string;
 }
 
-type PageStatus = 'loading' | 'success' | 'not-found' | 'unpublished' | 'error';
+type PageStatus = 'loading' | 'success' | 'not-found' | 'unpublished' | 'expired' | 'error';
 
 export function PublicPropertyPage({ slug }: Props) {
   const [property, setProperty] = useState<Property | null>(null);
@@ -26,6 +26,11 @@ export function PublicPropertyPage({ slug }: Props) {
 
       if (!publicProperty) {
         setStatus('not-found');
+        return;
+      }
+
+      if (isExpired(publicProperty)) {
+        setStatus('expired');
         return;
       }
 
@@ -68,6 +73,14 @@ export function PublicPropertyPage({ slug }: Props) {
           />
         )}
 
+        {status === 'expired' && (
+          <EmptyState
+            icon={<Clock size={34} />}
+            title="Esta publicación venció"
+            text="Las publicaciones se eliminan automáticamente después de 30 días. Pide al anunciante que genere un link nuevo si la propiedad sigue disponible."
+          />
+        )}
+
         {status === 'error' && (
           <EmptyState
             icon={<RefreshCw size={34} />}
@@ -88,6 +101,11 @@ export function PublicPropertyPage({ slug }: Props) {
       <SiteFooter />
     </>
   );
+}
+
+function isExpired(property: Property): boolean {
+  if (property.status !== 'published' || !property.expiresAt) return false;
+  return new Date(property.expiresAt).getTime() <= Date.now();
 }
 
 function EmptyState({
