@@ -1,5 +1,5 @@
-import type { ChangeEvent, ReactNode } from 'react';
-import { Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
+import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
 import type {
   OperationType,
   PricePeriod,
@@ -28,6 +28,8 @@ const PRICE_PERIOD_OPTIONS: { value: PricePeriod; label: string }[] = [
 ];
 
 export function PropertyForm({ property, onChange }: Props) {
+  const [activeStep, setActiveStep] = useState(0);
+
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
     onChange({ ...property, [key]: value });
   }
@@ -44,211 +46,311 @@ export function PropertyForm({ property, onChange }: Props) {
     updateField(key, event.target.value as never);
   }
 
+  function numberOrUndefined(value: string) {
+    return value ? safeNumber(value) : undefined;
+  }
+
   // Marca visual de campo completo: palomita verde dentro del input.
   const ok = (valid: boolean) => (valid ? 'is-valid' : '');
 
+  const steps = [
+    {
+      id: 'principal',
+      icon: <Home size={18} />,
+      title: 'Información principal',
+      subtitle: 'Lo primero que verá un interesado.',
+      isComplete: property.title.trim().length >= 5 && property.description.trim().length >= 30,
+      content: (
+        <>
+          <label className={`full ${ok(property.title.trim().length >= 5)}`}>
+            Título de la propiedad
+            <input
+              value={property.title}
+              placeholder="Ej. Departamento amueblado en zona norte"
+              onChange={(event) => handleText(event, 'title')}
+            />
+          </label>
+          <label>
+            Tipo de propiedad
+            <select value={property.propertyType} onChange={(event) => updateField('propertyType', event.target.value as PropertyType)}>
+              {PROPERTY_TYPE_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Operación
+            <select value={property.operationType} onChange={(event) => updateField('operationType', event.target.value as OperationType)}>
+              {OPERATION_TYPE_OPTIONS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <label className={`full ${ok(property.description.trim().length >= 30)}`}>
+            Descripción
+            <textarea
+              value={property.description}
+              placeholder="Estado del inmueble, beneficios, para quién es ideal, detalles prácticos..."
+              onChange={(event) => handleText(event, 'description')}
+            />
+          </label>
+        </>
+      )
+    },
+    {
+      id: 'precio',
+      icon: <Wallet size={18} />,
+      title: 'Precio y condiciones',
+      subtitle: 'Un precio claro filtra mejor a los interesados.',
+      isComplete: property.price > 0 && property.depositText.trim().length > 0 && property.minimumContractText.trim().length > 0,
+      content: (
+        <>
+          <label className={ok(property.price > 0)}>
+            Precio
+            <input
+              value={property.price || ''}
+              inputMode="numeric"
+              placeholder="12000"
+              onChange={(event) => updateField('price', safeNumber(event.target.value))}
+            />
+          </label>
+          <label>
+            Moneda
+            <select value={property.currency} onChange={(event) => updateField('currency', event.target.value as 'MXN' | 'USD')}>
+              <option value="MXN">MXN</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+          <label>
+            Periodicidad
+            <select value={property.pricePeriod} onChange={(event) => updateField('pricePeriod', event.target.value as PricePeriod)}>
+              {PRICE_PERIOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className={ok(property.availableFrom.trim().length > 0)}>
+            Disponible desde
+            <input value={property.availableFrom} placeholder="Inmediata, 1 de agosto..." onChange={(event) => handleText(event, 'availableFrom')} />
+          </label>
+          <label className={ok(property.depositText.trim().length > 0)}>
+            Depósito
+            <input value={property.depositText} placeholder="Ej. 1 mes de depósito" onChange={(event) => handleText(event, 'depositText')} />
+          </label>
+          <label className={ok(property.minimumContractText.trim().length > 0)}>
+            Contrato mínimo
+            <input value={property.minimumContractText} placeholder="Ej. Contrato mínimo de 12 meses" onChange={(event) => handleText(event, 'minimumContractText')} />
+          </label>
+          <div className="toggle-row full">
+            <label className="toggle-label">
+              <input type="checkbox" checked={property.maintenanceIncluded} onChange={(event) => updateField('maintenanceIncluded', event.target.checked)} />
+              Mantenimiento incluido
+            </label>
+          </div>
+          <label className={`full ${ok(property.servicesIncluded.length > 0)}`}>
+            Servicios incluidos, uno por línea
+            <textarea
+              value={textFromList(property.servicesIncluded)}
+              placeholder={'Agua\nInternet\nGas'}
+              onChange={(event) => updateField('servicesIncluded', listFromText(event.target.value))}
+            />
+          </label>
+        </>
+      )
+    },
+    {
+      id: 'ubicacion',
+      icon: <MapPin size={18} />,
+      title: 'Ubicación y mapa',
+      subtitle: 'Tú decides cuánto detalle mostrar públicamente.',
+      isComplete: property.location.city.trim().length > 0 && property.location.state.trim().length > 0 && property.location.neighborhood.trim().length > 0,
+      content: (
+        <>
+          <label className={ok(property.location.city.trim().length > 0)}>
+            Ciudad
+            <input value={property.location.city} placeholder="León" onChange={(event) => updateLocation('city', event.target.value)} />
+          </label>
+          <label className={ok(property.location.state.trim().length > 0)}>
+            Estado
+            <input value={property.location.state} placeholder="Guanajuato" onChange={(event) => updateLocation('state', event.target.value)} />
+          </label>
+          <label className={ok(property.location.neighborhood.trim().length > 0)}>
+            Colonia / zona
+            <input value={property.location.neighborhood} placeholder="Zona norte" onChange={(event) => updateLocation('neighborhood', event.target.value)} />
+          </label>
+          <label className={ok(property.location.address.trim().length > 0)}>
+            Domicilio exacto
+            <input value={property.location.address} placeholder="Calle, número, colonia" onChange={(event) => updateLocation('address', event.target.value)} />
+          </label>
+          <label>
+            Latitud del mapa
+            <input value={property.location.lat ?? ''} inputMode="decimal" placeholder="21.1619" onChange={(event) => updateLocation('lat', numberOrUndefined(event.target.value))} />
+          </label>
+          <label>
+            Longitud del mapa
+            <input value={property.location.lng ?? ''} inputMode="decimal" placeholder="-101.6863" onChange={(event) => updateLocation('lng', numberOrUndefined(event.target.value))} />
+          </label>
+          <div className="toggle-row full">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={property.location.showExactAddress}
+                onChange={(event) => updateLocation('showExactAddress', event.target.checked)}
+              />
+              Mostrar domicilio exacto públicamente
+            </label>
+          </div>
+          <p className="form-note full">
+            Si capturas coordenadas pero no muestras el domicilio exacto, la landing mostrará un mapa aproximado para cuidar la privacidad.
+          </p>
+          <label className={`full ${ok(property.location.references.trim().length > 0)}`}>
+            Referencias de ubicación
+            <textarea
+              value={property.location.references}
+              placeholder="Ej. A dos cuadras del blvd. Campestre, frente al parque..."
+              onChange={(event) => updateLocation('references', event.target.value)}
+            />
+          </label>
+          <div className="full">
+            <NearbyPlacesEditor
+              places={property.location.nearbyPlaces}
+              onChange={(nearbyPlaces) => updateLocation('nearbyPlaces', nearbyPlaces)}
+            />
+          </div>
+        </>
+      )
+    },
+    {
+      id: 'caracteristicas',
+      icon: <ListChecks size={18} />,
+      title: 'Características y requisitos',
+      subtitle: 'Ordena los datos duros antes de amenidades y requisitos.',
+      isComplete: property.bedrooms > 0 && property.bathrooms > 0 && property.amenities.length > 0 && property.requirements.length > 0,
+      content: (
+        <>
+          <label className={ok(property.bedrooms > 0)}>
+            Recámaras
+            <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('bedrooms', safeNumber(event.target.value))} />
+          </label>
+          <label className={ok(property.bathrooms > 0)}>
+            Baños
+            <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
+          </label>
+          <label className={ok(property.parkingSpaces > 0)}>
+            Estacionamientos
+            <input value={property.parkingSpaces || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('parkingSpaces', safeNumber(event.target.value))} />
+          </label>
+          <label className={ok(Boolean(property.areaM2 && property.areaM2 > 0))}>
+            Metros cuadrados
+            <input
+              value={property.areaM2 ?? ''}
+              inputMode="numeric"
+              placeholder="78"
+              onChange={(event) => updateField('areaM2', event.target.value ? safeNumber(event.target.value) : undefined)}
+            />
+          </label>
+          <div className="toggle-row full">
+            <label className="toggle-label">
+              <input type="checkbox" checked={property.furnished} onChange={(event) => updateField('furnished', event.target.checked)} />
+              Amueblado
+            </label>
+            <label className="toggle-label">
+              <input type="checkbox" checked={property.petsAllowed} onChange={(event) => updateField('petsAllowed', event.target.checked)} />
+              Acepta mascotas
+            </label>
+          </div>
+          <label className={`full ${ok(property.amenities.length > 0)}`}>
+            Amenidades, una por línea
+            <textarea
+              value={textFromList(property.amenities)}
+              placeholder={'Cocina equipada\nClóset\nZona tranquila'}
+              onChange={(event) => updateField('amenities', listFromText(event.target.value))}
+            />
+          </label>
+          <label className={`full ${ok(property.requirements.length > 0)}`}>
+            Requisitos, uno por línea
+            <textarea
+              value={textFromList(property.requirements)}
+              placeholder={'Identificación oficial\nComprobante de ingresos\nUn mes de depósito'}
+              onChange={(event) => updateField('requirements', listFromText(event.target.value))}
+            />
+          </label>
+        </>
+      )
+    },
+    {
+      id: 'fotos',
+      icon: <ImageIcon size={18} />,
+      title: 'Fotos',
+      subtitle: 'La primera foto o la marcada como portada abre la landing.',
+      isComplete: property.photos.length > 0,
+      content: (
+        <>
+          <div className="full">
+            <PhotoManager photos={property.photos} onChange={(photos) => updateField('photos', photos)} />
+          </div>
+          <div className="full">
+            <SmartTourTeaser />
+          </div>
+        </>
+      )
+    },
+    {
+      id: 'contacto',
+      icon: <Contact2 size={18} />,
+      title: 'Contacto',
+      subtitle: 'A dónde llegan los interesados.',
+      isComplete: property.contact.name.trim().length > 0 && hasValidWhatsapp(property.contact.whatsapp),
+      content: (
+        <>
+          <label className={ok(property.contact.name.trim().length > 0)}>
+            Nombre de contacto
+            <input value={property.contact.name} placeholder="Tu nombre o el de tu inmobiliaria" onChange={(event) => updateContact('name', event.target.value)} />
+          </label>
+          <label className={ok(hasValidWhatsapp(property.contact.whatsapp))}>
+            WhatsApp (con lada, ej. 5247...)
+            <input value={property.contact.whatsapp} inputMode="tel" placeholder="524771234567" onChange={(event) => updateContact('whatsapp', event.target.value)} />
+          </label>
+        </>
+      )
+    }
+  ];
+
+  const currentStep = steps[activeStep];
+  const isFirstStep = activeStep === 0;
+  const isLastStep = activeStep === steps.length - 1;
+
   return (
     <form className="property-form" onSubmit={(event) => event.preventDefault()}>
-      <FormSection icon={<Home size={18} />} title="Información principal" subtitle="Lo primero que verá un interesado.">
-        <label className={`full ${ok(property.title.trim().length >= 5)}`}>
-          Título de la propiedad
-          <input
-            value={property.title}
-            placeholder="Ej. Departamento amueblado en zona norte"
-            onChange={(event) => handleText(event, 'title')}
-          />
-        </label>
-        <label>
-          Tipo de propiedad
-          <select value={property.propertyType} onChange={(event) => updateField('propertyType', event.target.value as PropertyType)}>
-            {PROPERTY_TYPE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Operación
-          <select value={property.operationType} onChange={(event) => updateField('operationType', event.target.value as OperationType)}>
-            {OPERATION_TYPE_OPTIONS.map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>
-        <label className={`full ${ok(property.description.trim().length >= 30)}`}>
-          Descripción
-          <textarea
-            value={property.description}
-            placeholder="Estado del inmueble, beneficios, para quién es ideal, detalles prácticos..."
-            onChange={(event) => handleText(event, 'description')}
-          />
-        </label>
-      </FormSection>
+      <div className="form-wizard">
+        <div className="form-wizard-steps" aria-label="Secciones del formulario">
+          {steps.map((step, index) => (
+            <button
+              key={step.id}
+              type="button"
+              className={`wizard-step ${index === activeStep ? 'is-active' : ''} ${step.isComplete ? 'is-complete' : ''}`}
+              onClick={() => setActiveStep(index)}
+            >
+              <span className="wizard-step-index">{step.isComplete ? <CheckCircle2 size={15} /> : index + 1}</span>
+              <span>{step.title}</span>
+            </button>
+          ))}
+        </div>
 
-      <FormSection icon={<Wallet size={18} />} title="Precio y condiciones" subtitle="Un precio claro filtra mejor a los interesados.">
-        <label className={ok(property.price > 0)}>
-          Precio
-          <input
-            value={property.price || ''}
-            inputMode="numeric"
-            placeholder="12000"
-            onChange={(event) => updateField('price', safeNumber(event.target.value))}
-          />
-        </label>
-        <label>
-          Moneda
-          <select value={property.currency} onChange={(event) => updateField('currency', event.target.value as 'MXN' | 'USD')}>
-            <option value="MXN">MXN</option>
-            <option value="USD">USD</option>
-          </select>
-        </label>
-        <label>
-          Periodicidad
-          <select value={property.pricePeriod} onChange={(event) => updateField('pricePeriod', event.target.value as PricePeriod)}>
-            {PRICE_PERIOD_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
-        <label className={ok(property.availableFrom.trim().length > 0)}>
-          Disponible desde
-          <input value={property.availableFrom} placeholder="Inmediata, 1 de agosto..." onChange={(event) => handleText(event, 'availableFrom')} />
-        </label>
-        <label className={ok(property.depositText.trim().length > 0)}>
-          Depósito
-          <input value={property.depositText} placeholder="Ej. 1 mes de depósito" onChange={(event) => handleText(event, 'depositText')} />
-        </label>
-        <label className={ok(property.minimumContractText.trim().length > 0)}>
-          Contrato mínimo
-          <input value={property.minimumContractText} placeholder="Ej. Contrato mínimo de 12 meses" onChange={(event) => handleText(event, 'minimumContractText')} />
-        </label>
-        <div className="toggle-row full">
-          <label className="toggle-label">
-            <input type="checkbox" checked={property.maintenanceIncluded} onChange={(event) => updateField('maintenanceIncluded', event.target.checked)} />
-            Mantenimiento incluido
-          </label>
-        </div>
-        <label className={`full ${ok(property.servicesIncluded.length > 0)}`}>
-          Servicios incluidos, uno por línea
-          <textarea
-            value={textFromList(property.servicesIncluded)}
-            placeholder={'Agua\nInternet\nGas'}
-            onChange={(event) => updateField('servicesIncluded', listFromText(event.target.value))}
-          />
-        </label>
-      </FormSection>
+        <FormSection icon={currentStep.icon} title={currentStep.title} subtitle={currentStep.subtitle}>
+          {currentStep.content}
+        </FormSection>
 
-      <FormSection icon={<MapPin size={18} />} title="Ubicación" subtitle="Tú decides cuánto detalle mostrar públicamente.">
-        <label className={ok(property.location.city.trim().length > 0)}>
-          Ciudad
-          <input value={property.location.city} placeholder="León" onChange={(event) => updateLocation('city', event.target.value)} />
-        </label>
-        <label className={ok(property.location.state.trim().length > 0)}>
-          Estado
-          <input value={property.location.state} placeholder="Guanajuato" onChange={(event) => updateLocation('state', event.target.value)} />
-        </label>
-        <label className={ok(property.location.neighborhood.trim().length > 0)}>
-          Colonia / zona
-          <input value={property.location.neighborhood} placeholder="Zona norte" onChange={(event) => updateLocation('neighborhood', event.target.value)} />
-        </label>
-        <label className={ok(property.location.address.trim().length > 0)}>
-          Domicilio exacto
-          <input value={property.location.address} placeholder="Calle, número, colonia" onChange={(event) => updateLocation('address', event.target.value)} />
-        </label>
-        <div className="toggle-row full">
-          <label className="toggle-label">
-            <input
-              type="checkbox"
-              checked={property.location.showExactAddress}
-              onChange={(event) => updateLocation('showExactAddress', event.target.checked)}
-            />
-            Mostrar domicilio exacto públicamente
-          </label>
+        <div className="form-wizard-actions">
+          <button type="button" className="secondary-button" onClick={() => setActiveStep((step) => Math.max(0, step - 1))} disabled={isFirstStep}>
+            <ChevronLeft size={17} /> Anterior
+          </button>
+          <span>Paso {activeStep + 1} de {steps.length}</span>
+          <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))} disabled={isLastStep}>
+            Siguiente <ChevronRight size={17} />
+          </button>
         </div>
-        <label className={`full ${ok(property.location.references.trim().length > 0)}`}>
-          Referencias de ubicación
-          <textarea
-            value={property.location.references}
-            placeholder="Ej. A dos cuadras del blvd. Campestre, frente al parque..."
-            onChange={(event) => updateLocation('references', event.target.value)}
-          />
-        </label>
-        <div className="full">
-          <NearbyPlacesEditor
-            places={property.location.nearbyPlaces}
-            onChange={(nearbyPlaces) => updateLocation('nearbyPlaces', nearbyPlaces)}
-          />
-        </div>
-      </FormSection>
-
-      <FormSection icon={<ListChecks size={18} />} title="Características" subtitle="Los datos duros del inmueble.">
-        <label className={ok(property.bedrooms > 0)}>
-          Recámaras
-          <input value={property.bedrooms || ''} inputMode="numeric" placeholder="2" onChange={(event) => updateField('bedrooms', safeNumber(event.target.value))} />
-        </label>
-        <label className={ok(property.bathrooms > 0)}>
-          Baños
-          <input value={property.bathrooms || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('bathrooms', safeNumber(event.target.value))} />
-        </label>
-        <label className={ok(property.parkingSpaces > 0)}>
-          Estacionamientos
-          <input value={property.parkingSpaces || ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('parkingSpaces', safeNumber(event.target.value))} />
-        </label>
-        <label className={ok(Boolean(property.areaM2 && property.areaM2 > 0))}>
-          Metros cuadrados
-          <input
-            value={property.areaM2 ?? ''}
-            inputMode="numeric"
-            placeholder="78"
-            onChange={(event) => updateField('areaM2', event.target.value ? safeNumber(event.target.value) : undefined)}
-          />
-        </label>
-        <div className="toggle-row full">
-          <label className="toggle-label">
-            <input type="checkbox" checked={property.furnished} onChange={(event) => updateField('furnished', event.target.checked)} />
-            Amueblado
-          </label>
-          <label className="toggle-label">
-            <input type="checkbox" checked={property.petsAllowed} onChange={(event) => updateField('petsAllowed', event.target.checked)} />
-            Acepta mascotas
-          </label>
-        </div>
-        <label className={`full ${ok(property.amenities.length > 0)}`}>
-          Amenidades, una por línea
-          <textarea
-            value={textFromList(property.amenities)}
-            placeholder={'Cocina equipada\nClóset\nZona tranquila'}
-            onChange={(event) => updateField('amenities', listFromText(event.target.value))}
-          />
-        </label>
-        <label className={`full ${ok(property.requirements.length > 0)}`}>
-          Requisitos, uno por línea
-          <textarea
-            value={textFromList(property.requirements)}
-            placeholder={'Identificación oficial\nComprobante de ingresos\nUn mes de depósito'}
-            onChange={(event) => updateField('requirements', listFromText(event.target.value))}
-          />
-        </label>
-      </FormSection>
-
-      <FormSection icon={<ImageIcon size={18} />} title="Fotos" subtitle="La primera foto o la marcada como portada abre la landing.">
-        <div className="full">
-          <PhotoManager photos={property.photos} onChange={(photos) => updateField('photos', photos)} />
-        </div>
-        <div className="full">
-          <SmartTourTeaser />
-        </div>
-      </FormSection>
-
-      <FormSection icon={<Contact2 size={18} />} title="Contacto" subtitle="A dónde llegan los interesados.">
-        <label className={ok(property.contact.name.trim().length > 0)}>
-          Nombre de contacto
-          <input value={property.contact.name} placeholder="Tu nombre o el de tu inmobiliaria" onChange={(event) => updateContact('name', event.target.value)} />
-        </label>
-        <label className={ok(hasValidWhatsapp(property.contact.whatsapp))}>
-          WhatsApp (con lada, ej. 5247...)
-          <input value={property.contact.whatsapp} inputMode="tel" placeholder="524771234567" onChange={(event) => updateContact('whatsapp', event.target.value)} />
-        </label>
-      </FormSection>
+      </div>
     </form>
   );
 }
