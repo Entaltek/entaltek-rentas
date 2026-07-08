@@ -325,12 +325,11 @@ function HeroSummaryCard({
       <p className="eyebrow">
         {PROPERTY_TYPE_LABELS[property.propertyType]} · {OPERATION_TYPE_LABELS[property.operationType]}
       </p>
-      <h1>{property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}</h1>
+      <div className="hero-summary-title">
+        {property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}
+      </div>
       {(locationShort || isPreview) && (
         <span className="hero-summary-location"><MapPin size={15} /> {locationShort || 'Colonia, ciudad y estado'}</span>
-      )}
-      {(property.description || isPreview) && (
-        <p>{property.description || 'Describe aquí estado, beneficios y detalles importantes de la propiedad.'}</p>
       )}
     </div>
   );
