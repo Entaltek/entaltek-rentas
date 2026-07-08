@@ -10,6 +10,8 @@ export interface PublishValidation {
 export function validateForPublish(property: Property): PublishValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const requirements = property.requirements ?? [];
+  const requiredDocuments = property.requiredDocuments ?? [];
 
   if (!property.title.trim()) {
     errors.push('Agrega un título a la propiedad.');
@@ -23,6 +25,12 @@ export function validateForPublish(property: Property): PublishValidation {
   if (!property.location.neighborhood.trim() && !property.location.address.trim()) {
     errors.push('Agrega la colonia/zona o el domicilio.');
   }
+  if (!requirements.length) {
+    errors.push('Agrega al menos un requisito de renta o venta.');
+  }
+  if (!requiredDocuments.length) {
+    errors.push('Agrega al menos un documento requerido.');
+  }
   if (!hasValidWhatsapp(property.contact.whatsapp)) {
     errors.push('Agrega un WhatsApp de contacto válido (10 dígitos con lada).');
   }
@@ -32,6 +40,9 @@ export function validateForPublish(property: Property): PublishValidation {
   }
   if (!property.description.trim()) {
     warnings.push('La descripción está vacía. Una buena descripción reduce preguntas repetidas.');
+  }
+  if (property.photos.length > 8) {
+    warnings.push('El preview agrupará fotos extra en un carrete para no saturar la publicación.');
   }
 
   return { canPublish: errors.length === 0, errors, warnings };
