@@ -56,6 +56,10 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     return value ? safeNumber(value) : undefined;
   }
 
+  function scrollToPublishSection() {
+    document.getElementById('publish-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   // Marca visual de campo completo: palomita verde dentro del input.
   const ok = (valid: boolean) => (valid ? 'is-valid' : '');
 
@@ -368,12 +372,18 @@ export function PropertyForm({ property, onChange, footer }: Props) {
             <ChevronLeft size={17} /> Anterior
           </button>
           <span>Paso {activeStep + 1} de {steps.length}</span>
-          <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))} disabled={isLastStep}>
-            Siguiente <ChevronRight size={17} />
-          </button>
+          {isLastStep ? (
+            <button type="button" className="primary-button" onClick={scrollToPublishSection}>
+              Revisar y publicar <ChevronRight size={17} />
+            </button>
+          ) : (
+            <button type="button" className="primary-button" onClick={() => setActiveStep((step) => Math.min(steps.length - 1, step + 1))}>
+              Siguiente <ChevronRight size={17} />
+            </button>
+          )}
         </div>
 
-        {footer && <div className="form-wizard-footer">{footer}</div>}
+        {footer && <div id="publish-section" className="form-wizard-footer">{footer}</div>}
       </div>
     </form>
   );
