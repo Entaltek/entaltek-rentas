@@ -20,7 +20,7 @@ import {
   Trees,
   UtensilsCrossed
 } from 'lucide-react';
-import type { NearbyPlaceType, Property, PropertyPhoto } from '../types/property';
+import type { NearbyPlaceType, Property } from '../types/property';
 import { NEARBY_PLACE_TYPE_LABELS, OPERATION_TYPE_LABELS, PROPERTY_TYPE_LABELS } from '../types/property';
 import { buildWhatsappUrl, formatLocationShort, formatPrice, formatPricePeriod, hasValidWhatsapp } from '../lib/format';
 import { sortPhotos } from '../lib/photos';
@@ -92,7 +92,7 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
             {activePhoto ? (
               <figure className="hero-figure" key={activePhoto.id}>
                 <img src={activePhoto.url} alt={activePhoto.alt || activePhoto.title || `Foto principal de ${property.title}`} className="hero-image" />
-                <HeroSummaryCard property={property} locationShort={locationShort} activePhoto={activePhoto} isPreview={isPreview} />
+                {activePhoto.title && <figcaption className="photo-overlay main-photo-label">{activePhoto.title}</figcaption>}
               </figure>
             ) : (
               <div className="image-placeholder hero-image">
@@ -305,33 +305,6 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
         </div>
       )}
     </article>
-  );
-}
-
-function HeroSummaryCard({
-  property,
-  locationShort,
-  activePhoto,
-  isPreview
-}: {
-  property: Property;
-  locationShort: string;
-  activePhoto: PropertyPhoto;
-  isPreview: boolean;
-}) {
-  return (
-    <div className="hero-summary-card">
-      {activePhoto.title && <span className="hero-space-chip">{activePhoto.title}</span>}
-      <p className="eyebrow">
-        {PROPERTY_TYPE_LABELS[property.propertyType]} · {OPERATION_TYPE_LABELS[property.operationType]}
-      </p>
-      <div className="hero-summary-title">
-        {property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}
-      </div>
-      {(locationShort || isPreview) && (
-        <span className="hero-summary-location"><MapPin size={15} /> {locationShort || 'Colonia, ciudad y estado'}</span>
-      )}
-    </div>
   );
 }
 
