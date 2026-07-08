@@ -33,6 +33,7 @@ export interface PropertyLocation {
   neighborhood: string;
   address: string;
   references: string;
+  googleMapsUrl?: string;
   lat?: number;
   lng?: number;
   showExactAddress: boolean;
@@ -129,6 +130,7 @@ export function createEmptyLocation(): PropertyLocation {
     neighborhood: '',
     address: '',
     references: '',
+    googleMapsUrl: '',
     showExactAddress: false,
     nearbyPlaces: []
   };
