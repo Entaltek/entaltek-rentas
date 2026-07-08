@@ -1,0 +1,174 @@
+/* Ajustes finales: progreso por etiquetas, galería vertical y card principal elevada. */
+
+.editor-progress-labels {
+  position: sticky;
+  top: 70px;
+  z-index: 26;
+  display: flex;
+  gap: 10px;
+  width: 100vw;
+  margin: 14px calc(50% - 50vw) 8px;
+  padding: 10px max(18px, calc((100vw - 1680px) / 2 + 24px));
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(1, 55, 98, 0.08);
+  border-bottom: 1px solid rgba(1, 55, 98, 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.18);
+  backdrop-filter: blur(14px) saturate(1.18);
+  box-shadow: 0 10px 26px rgba(1, 55, 98, 0.07);
+  scrollbar-width: thin;
+}
+
+.editor-progress-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: max-content;
+  flex: 1 1 0;
+  padding: 9px 14px;
+  border: 1px solid rgba(1, 55, 98, 0.14);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+  transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.editor-progress-label > span {
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: rgba(1, 55, 98, 0.08);
+  color: var(--tech);
+  font-size: 12px;
+}
+
+.editor-progress-label.is-complete {
+  border-color: rgba(14, 122, 78, 0.32);
+  background: rgba(14, 122, 78, 0.12);
+  color: #075f3c;
+}
+
+.editor-progress-label.is-complete > span {
+  background: #075f3c;
+  color: white;
+}
+
+.editor-progress-label:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.completeness,
+.completeness-bar,
+.completeness-label {
+  display: none !important;
+}
+
+.property-card:not(.is-preview) {
+  position: relative;
+  overflow: visible;
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel {
+  grid-template-columns: minmax(0, 1fr) minmax(126px, 170px);
+  align-items: stretch;
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .hero-figure {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .gallery-column {
+  display: none;
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .photo-reel {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  margin: 0;
+  padding: 0 2px 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: transparent;
+  scrollbar-width: thin;
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .photo-reel-item {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 auto;
+  background: white;
+  border: 1px solid rgba(1, 55, 98, 0.16);
+  box-shadow: 0 8px 20px rgba(1, 55, 98, 0.08);
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .photo-reel-item:hover {
+  transform: translateX(-2px);
+}
+
+.property-card:not(.is-preview) .hero-grid.has-reel .photo-reel-item img {
+  height: clamp(72px, 7vw, 102px);
+}
+
+.property-card:not(.is-preview) .property-content {
+  padding-top: 18px;
+}
+
+.property-card:not(.is-preview) .property-title-card {
+  margin-top: clamp(-96px, -5.6vw, -58px);
+  margin-bottom: 34px;
+  box-shadow: 0 24px 60px rgba(1, 55, 98, 0.2);
+}
+
+.preview-frame .property-card.is-preview .photo-reel,
+.example-frame .property-card.is-preview .photo-reel {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1280px) {
+  .property-card:not(.is-preview) .hero-grid.has-reel {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .property-card:not(.is-preview) .hero-grid.has-reel .photo-reel {
+    grid-column: 1;
+    grid-row: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 0 8px;
+  }
+
+  .property-card:not(.is-preview) .hero-grid.has-reel .photo-reel-item {
+    min-width: 118px;
+    max-width: 150px;
+  }
+
+  .property-card:not(.is-preview) .property-title-card {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .editor-progress-labels {
+    top: 68px;
+    padding-inline: 12px;
+  }
+
+  .editor-progress-label {
+    flex: 0 0 auto;
+    padding-inline: 12px;
+  }
+}
