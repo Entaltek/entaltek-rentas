@@ -10,13 +10,13 @@ export function safeNumber(value: string, fallback = 0): number {
 
 export function listFromText(value: string): string[] {
   return value
-    .split('\n')
+    .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
 
 export function textFromList(value: string[]): string {
-  return value.join('\n');
+  return value.join(', ');
 }
 
 export function loadPropertyDraft(): Property {
@@ -37,9 +37,11 @@ export function loadPropertyDraft(): Property {
       location: { ...empty.location, ...parsed.location },
       contact: { ...empty.contact, ...parsed.contact },
       photos: Array.isArray(parsed.photos) ? parsed.photos : [],
+      featureTags: Array.isArray(parsed.featureTags) ? parsed.featureTags : [],
       servicesIncluded: Array.isArray(parsed.servicesIncluded) ? parsed.servicesIncluded : [],
       amenities: Array.isArray(parsed.amenities) ? parsed.amenities : [],
-      requirements: Array.isArray(parsed.requirements) ? parsed.requirements : []
+      requirements: Array.isArray(parsed.requirements) ? parsed.requirements : [],
+      requiredDocuments: Array.isArray(parsed.requiredDocuments) ? parsed.requiredDocuments : []
     };
   } catch {
     return empty;
