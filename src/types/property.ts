@@ -1,6 +1,6 @@
 export type PropertyStatus = 'draft' | 'published' | 'unpublished';
 
-export type PropertyType = 'departamento' | 'casa' | 'habitacion' | 'local' | 'oficina' | 'otro';
+export type PropertyType = 'departamento' | 'casa' | 'habitacion' | 'loft' | 'local' | 'oficina' | 'otro';
 
 export type OperationType = 'renta' | 'venta' | 'renta-temporal';
 
@@ -61,6 +61,14 @@ export interface PropertyPhoto {
   order: number;
 }
 
+export interface PropertyRoomDetail {
+  id: string;
+  label: string;
+  capacity: number;
+  hasPrivateBathroom: boolean;
+  isShared: boolean;
+}
+
 export interface Property {
   id: string;
   slug: string;
@@ -81,6 +89,9 @@ export interface Property {
   availableFrom: string;
   bedrooms: number;
   bathrooms: number;
+  fullBathrooms?: number;
+  halfBathrooms?: number;
+  sharedBathrooms?: number;
   parkingSpaces: number;
   parkingTypes?: ParkingType[];
   parkingVehicleSize?: ParkingVehicleSize;
@@ -89,6 +100,7 @@ export interface Property {
   petsAllowed: boolean;
   bathroomTypes?: BathroomType[];
   roomTypes?: RoomType[];
+  roomDetails?: PropertyRoomDetail[];
   peoplePerRoom?: number;
   sharedRooms?: number;
   isSharedProperty?: boolean;
@@ -111,6 +123,7 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   departamento: 'Departamento',
   casa: 'Casa',
   habitacion: 'Habitación',
+  loft: 'Loft',
   local: 'Local comercial',
   oficina: 'Oficina',
   otro: 'Otro'
@@ -209,6 +222,9 @@ export function createEmptyProperty(): Property {
     availableFrom: '',
     bedrooms: 0,
     bathrooms: 0,
+    fullBathrooms: undefined,
+    halfBathrooms: undefined,
+    sharedBathrooms: undefined,
     parkingSpaces: 0,
     parkingTypes: [],
     parkingVehicleSize: undefined,
@@ -217,6 +233,7 @@ export function createEmptyProperty(): Property {
     petsAllowed: false,
     bathroomTypes: [],
     roomTypes: [],
+    roomDetails: [],
     peoplePerRoom: undefined,
     sharedRooms: undefined,
     isSharedProperty: false,
