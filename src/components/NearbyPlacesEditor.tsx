@@ -23,13 +23,16 @@ export function NearbyPlacesEditor({ places, onChange }: Props) {
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
+    const normalizedDistance = normalizeDistance(distanceText);
+
     onChange([
       ...places,
       {
         id: generateId('place'),
         name: trimmedName,
         type,
-        distanceText: distanceText.trim() || undefined
+        distanceText: normalizedDistance.text || undefined,
+        distanceMeters: normalizedDistance.meters
       }
     ]);
     setName('');
@@ -67,7 +70,7 @@ export function NearbyPlacesEditor({ places, onChange }: Props) {
         </select>
         <input
           value={distanceText}
-          placeholder="Distancia, ej. a 5 min"
+          placeholder="Distancia, ej. 350 m, 2 km, 500 mts"
           onChange={(event) => setDistanceText(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -99,4 +102,22 @@ export function NearbyPlacesEditor({ places, onChange }: Props) {
       )}
     </div>
   );
+}
+
+function normalizeDistance(value: string): { text: string; meters?: number } {
+  const trimmed = value.trim();
+  if (!trimmed) return { text: '' };
+
+  const match = trimmed.match(/(\d+(?:[.,]\d+)?)\s*(km|kilometros|kilómetros|kilometro|kilómetro|mts|mt|m|metros|metro)\b/i);
+  if (!match) return { text: trimmed };
+
+  const amount = Number(match[1].replace(',', '.'));
+  const unit = match[2].toLowerCase();
+  if (Number.isNaN(amount)) return { text: trimmed };
+
+  const isKm = ['km', 'kilometros', 'kilómetros', 'kilometro', 'kilómetro'].includes(unit);
+  const meters = Math.round(isKm ? amount * 1000 : amount);
+  const text = isKm ? `${amount:g} km` : `${meters} m`;
+
+  return { text: text.replace(':g', ''), meters };
 }
