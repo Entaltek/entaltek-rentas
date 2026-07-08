@@ -38,7 +38,7 @@ function writeStore(properties: Property[]): void {
 }
 
 function normalizeProperty(property: Partial<Property>): Property {
-  return {
+  const normalized = {
     ...(property as Property),
     featureTags: Array.isArray(property.featureTags) ? property.featureTags : [],
     servicesIncluded: Array.isArray(property.servicesIncluded) ? property.servicesIncluded : [],
@@ -46,6 +46,12 @@ function normalizeProperty(property: Partial<Property>): Property {
     requirements: Array.isArray(property.requirements) ? property.requirements : [],
     requiredDocuments: Array.isArray(property.requiredDocuments) ? property.requiredDocuments : []
   };
+
+  if (normalized.status === 'published' && !normalized.expiresAt && normalized.publishedAt) {
+    return { ...normalized, expiresAt: getExpirationDate(normalized.publishedAt) };
+  }
+
+  return normalized;
 }
 
 function getExpirationDate(fromIso: string): string {
@@ -55,8 +61,10 @@ function getExpirationDate(fromIso: string): string {
 }
 
 function isExpired(property: Property): boolean {
-  if (property.status !== 'published' || !property.expiresAt) return false;
-  return new Date(property.expiresAt).getTime() <= Date.now();
+  if (property.status !== 'published') return false;
+  const expirationSource = property.expiresAt ?? (property.publishedAt ? getExpirationDate(property.publishedAt) : '');
+  if (!expirationSource) return false;
+  return new Date(expirationSource).getTime() <= Date.now();
 }
 
 export async function listProperties(): Promise<Property[]> {
