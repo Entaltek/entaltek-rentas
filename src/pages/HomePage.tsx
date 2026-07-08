@@ -32,8 +32,9 @@ export function HomePage() {
             <p className="eyebrow">Entaltek Rentas</p>
             <h1>Crea una publicación profesional para rentar tu propiedad</h1>
             <p>
-              Sube fotos, agrega precio, ubicación y requisitos. Genera una landing lista para
-              compartir en Marketplace o WhatsApp en minutos.
+              Marketplace trae interesados, pero limita cómo presentas tu propiedad. Con Entaltek
+              Rentas subes fotos, agregas precio, ubicación, mapa, requisitos y contacto directo
+              por WhatsApp para generar una landing lista para compartir en minutos.
             </p>
             <div className="hero-actions">
               <a href="/crear" className="primary-button large">Crear propiedad</a>
@@ -41,22 +42,12 @@ export function HomePage() {
             </div>
             <ul className="hero-points">
               <li><Camera size={16} /> Galería profesional</li>
+              <li><MapPin size={16} /> Ubicación y mapa</li>
               <li><MessageCircle size={16} /> Contacto directo por WhatsApp</li>
               <li><Link2 size={16} /> Link compartible al instante</li>
             </ul>
           </div>
           <HeroPreview />
-        </section>
-
-        <section className="problem-strip" aria-label="El problema y la solución">
-          <div>
-            <strong>El problema</strong>
-            <p>Marketplace trae interesados, pero limita cómo presentas tu propiedad.</p>
-          </div>
-          <div>
-            <strong>La solución</strong>
-            <p>Una página profesional con fotos, precio, requisitos, ubicación y contacto directo, lista para compartir con un link.</p>
-          </div>
         </section>
 
         <SmartTourSpotlight />
@@ -90,13 +81,13 @@ export function HomePage() {
               <span className="step-number">1</span>
               <PencilLine size={22} />
               <h3>Captura tu propiedad</h3>
-              <p>Título, precio, condiciones y características en un editor guiado con vista previa en vivo.</p>
+              <p>Título, precio, condiciones y características en un editor guiado por pantallas.</p>
             </div>
             <div className="step-card">
               <span className="step-number">2</span>
               <Camera size={22} />
               <h3>Sube fotos y ubicación</h3>
-              <p>Galería con títulos por foto, zona aproximada o domicilio exacto y lugares cercanos.</p>
+              <p>Galería con títulos por foto, zona aproximada o domicilio exacto, mapa y lugares cercanos.</p>
             </div>
             <div className="step-card">
               <span className="step-number">3</span>
@@ -115,7 +106,7 @@ export function HomePage() {
           <div className="includes-grid">
             <IncludeCard icon={<ImageIcon size={20} />} title="Galería profesional" text="Fotos grandes, ordenadas y con título: sala, cocina, recámaras." />
             <IncludeCard icon={<Wallet size={20} />} title="Precio y condiciones claras" text="Renta, depósito, contrato y servicios incluidos sin letras chiquitas." />
-            <IncludeCard icon={<MapPin size={20} />} title="Ubicación y alrededores" text="Zona, referencias y lugares cercanos. Tú decides si mostrar el domicilio exacto." />
+            <IncludeCard icon={<MapPin size={20} />} title="Ubicación, mapa y alrededores" text="Zona, referencias y lugares cercanos. Tú decides si mostrar el domicilio exacto." />
             <IncludeCard icon={<MessageCircle size={20} />} title="Contacto por WhatsApp" text="Botón directo con mensaje prellenado para no perder interesados." />
             <IncludeCard icon={<Link2 size={20} />} title="Link para Marketplace" text="Un solo link con toda la información, listo para pegar en tu publicación." />
             <IncludeCard
