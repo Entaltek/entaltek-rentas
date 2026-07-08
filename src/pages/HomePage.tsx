@@ -3,14 +3,16 @@ import {
   Bath,
   BedDouble,
   Camera,
+  CheckCircle2,
+  FileText,
   ImageIcon,
   Link2,
   MapPin,
   MessageCircle,
   PencilLine,
-  Rotate3D,
   Send,
   Share2,
+  ShieldCheck,
   Sofa,
   Wallet
 } from 'lucide-react';
@@ -29,16 +31,15 @@ export function HomePage() {
       <main className="home-page">
         <section className="intro">
           <div className="intro-copy">
-            <p className="eyebrow">Entaltek Rentas</p>
             <h1>Crea una publicación profesional para rentar tu propiedad</h1>
             <p>
-              Marketplace trae interesados, pero limita cómo presentas tu propiedad. Con Entaltek
-              Rentas subes fotos, agregas precio, ubicación, mapa, requisitos y contacto directo
-              por WhatsApp para generar una landing lista para compartir en minutos.
+              Convierte la información de tu inmueble en una landing clara, visual y lista para compartir.
+              Sube fotos, agrega precio, condiciones, ubicación desde Google Maps, requisitos y contacto por
+              WhatsApp para que cada interesado vea todo en un solo link.
             </p>
             <div className="hero-actions">
-              <a href="/crear" className="primary-button large">Crear propiedad</a>
-              <a href="#ejemplo" className="secondary-button large">Explorar ejemplo</a>
+              <a href="/crear" className="primary-button large">Generar landing para mi propiedad</a>
+              <a href="#ejemplo" className="secondary-button large">Ver publicación demo</a>
             </div>
             <ul className="hero-points">
               <li><Camera size={16} /> Galería profesional</li>
@@ -50,15 +51,29 @@ export function HomePage() {
           <HeroPreview />
         </section>
 
+        <section className="usage-summary" id="uso">
+          <div>
+            <p className="eyebrow">Uso rápido del sitio</p>
+            <h2>Publica mejor sin crear una página desde cero</h2>
+          </div>
+          <p>
+            Usa el editor para capturar los datos reales de tu propiedad, revisa la vista previa y genera un link
+            público. Ese link lo puedes pegar en Marketplace, grupos, WhatsApp o Instagram para enviar una
+            presentación más completa que una publicación normal.
+          </p>
+        </section>
+
         <SmartTourSpotlight />
 
         <section className="example-section" id="ejemplo">
-          <div className="section-heading">
-            <p className="eyebrow">Ejemplo en vivo</p>
-            <h2>Así se verá tu propiedad cuando la publiques</h2>
+          <div className="section-heading example-heading">
+            <div>
+              <p className="eyebrow">Publicación demo</p>
+              <h2>Así se verá tu propiedad cuando la publiques</h2>
+            </div>
             <p className="section-note">
-              Esta es una propiedad de ejemplo. La tuya se genera con tus datos reales: edítala en
-              el editor y compártela con un solo link.
+              Esta es una muestra visual. Cuando captures tu inmueble, la página se arma con tus fotos,
+              precio, ubicación, requisitos y contacto real para compartirla con un solo link.
             </p>
           </div>
           <div className="example-frame">
@@ -71,57 +86,64 @@ export function HomePage() {
           </div>
         </section>
 
-        <section className="how-section">
+        <section className="how-section" id="como-funciona">
           <div className="section-heading">
             <p className="eyebrow">Cómo funciona</p>
-            <h2>De tus fotos a un link compartible en 3 pasos</h2>
+            <h2>Captura, revisa y comparte tu landing de renta</h2>
+            <p className="section-note">
+              El flujo está pensado como una secuencia: primero completas la información, luego revisas la vista
+              previa y al final obtienes el link para compartir.
+            </p>
           </div>
           <div className="steps-grid">
             <div className="step-card">
               <span className="step-number">1</span>
               <PencilLine size={22} />
-              <h3>Captura tu propiedad</h3>
-              <p>Título, precio, condiciones y características en un editor guiado por pantallas.</p>
+              <h3>Captura la información</h3>
+              <p>Título, precio, condiciones, características, requisitos y contacto en un editor guiado.</p>
             </div>
             <div className="step-card">
               <span className="step-number">2</span>
               <Camera size={22} />
-              <h3>Sube fotos y ubicación</h3>
-              <p>Galería con títulos por foto, zona aproximada o domicilio exacto, mapa y lugares cercanos.</p>
+              <h3>Agrega fotos y ubicación</h3>
+              <p>Sube la galería, pega tu ubicación de Google Maps y decide si mostrar el domicilio exacto.</p>
             </div>
             <div className="step-card">
               <span className="step-number">3</span>
               <Share2 size={22} />
-              <h3>Publica y comparte tu link</h3>
-              <p>Genera la landing pública y compártela en Marketplace, grupos o WhatsApp con copy listo.</p>
+              <h3>Publica y comparte</h3>
+              <p>Genera tu landing pública y comparte el link en Marketplace, grupos, WhatsApp o redes.</p>
             </div>
           </div>
         </section>
 
-        <section className="includes-section">
+        <section className="includes-section" id="incluye">
           <div className="section-heading">
             <p className="eyebrow">Qué incluye</p>
-            <h2>Todo lo que una publicación normal no te deja mostrar</h2>
+            <h2>Información ordenada para que el interesado decida más rápido</h2>
           </div>
-          <div className="includes-grid">
-            <IncludeCard icon={<ImageIcon size={20} />} title="Galería profesional" text="Fotos grandes, ordenadas y con título: sala, cocina, recámaras." />
-            <IncludeCard icon={<Wallet size={20} />} title="Precio y condiciones claras" text="Renta, depósito, contrato y servicios incluidos sin letras chiquitas." />
-            <IncludeCard icon={<MapPin size={20} />} title="Ubicación, mapa y alrededores" text="Zona, referencias y lugares cercanos. Tú decides si mostrar el domicilio exacto." />
-            <IncludeCard icon={<MessageCircle size={20} />} title="Contacto por WhatsApp" text="Botón directo con mensaje prellenado para no perder interesados." />
-            <IncludeCard icon={<Link2 size={20} />} title="Link para Marketplace" text="Un solo link con toda la información, listo para pegar en tu publicación." />
-            <IncludeCard
-              icon={<Rotate3D size={20} />}
-              title="Recorrido inteligente"
-              text="Muy pronto: sube fotos o video y genera una experiencia inmersiva con vista 360 y plano."
-              soon
-            />
+          <div className="includes-list">
+            <IncludeRow icon={<ImageIcon size={20} />} title="Galería profesional" text="Fotos grandes, ordenadas y con título: sala, cocina, recámaras y detalles importantes." />
+            <IncludeRow icon={<Wallet size={20} />} title="Precio y condiciones claras" text="Renta, depósito, contrato, disponibilidad y servicios incluidos en una lectura fácil." />
+            <IncludeRow icon={<MapPin size={20} />} title="Ubicación y alrededores" text="Zona, domicilio opcional, referencias y lugares cercanos para dar contexto sin saturar la publicación." />
+            <IncludeRow icon={<MessageCircle size={20} />} title="Contacto por WhatsApp" text="Botón directo con mensaje prellenado para reducir fricción y no perder interesados." />
+            <IncludeRow icon={<Link2 size={20} />} title="Link para Marketplace" text="Un solo link con toda la información, listo para pegar en Facebook, WhatsApp o Instagram." />
+            <IncludeRow icon={<ShieldCheck size={20} />} title="Publicación más confiable" text="Presentación más completa, ordenada y revisable antes de que el interesado te escriba." />
           </div>
         </section>
 
-        <section className="final-cta">
-          <h2>Publica mejor. Renta más rápido.</h2>
-          <p>Convierte tus fotos en una publicación profesional en minutos.</p>
-          <a href="/crear" className="primary-button large">Crear mi propiedad</a>
+        <section className="faq-section" id="faq">
+          <div className="section-heading">
+            <p className="eyebrow">Preguntas frecuentes</p>
+            <h2>Dudas rápidas antes de publicar</h2>
+          </div>
+          <div className="faq-grid">
+            <FAQItem question="¿La landing reemplaza Marketplace?" answer="No. La idea es usar Marketplace para atraer interesados y pegar tu link para mostrar la información completa." />
+            <FAQItem question="¿Cada propiedad tiene su propio link?" answer="Sí. Al publicar se genera una URL propia para compartirla en redes, grupos o WhatsApp." />
+            <FAQItem question="¿Puedo mostrar u ocultar el domicilio exacto?" answer="Sí. Puedes guardar la dirección y decidir si se muestra públicamente o solo como zona aproximada." />
+            <FAQItem question="¿Necesito saber programar?" answer="No. El editor te guía para cargar fotos, precio, ubicación, requisitos y contacto." />
+            <FAQItem question="¿Qué pasa con el recorrido inteligente?" answer="Es una capacidad en desarrollo. Primero publicamos landings profesionales; después agregaremos experiencias visuales más avanzadas." />
+          </div>
         </section>
       </main>
       <SiteFooter />
@@ -168,15 +190,26 @@ function HeroPreview() {
   );
 }
 
-function IncludeCard({ icon, title, text, soon }: { icon: ReactNode; title: string; text: string; soon?: boolean }) {
+function IncludeRow({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <div className={`include-card ${soon ? 'is-soon' : ''}`}>
+    <div className="include-row">
       <div className="include-icon">{icon}</div>
-      <h3>
-        {title}
-        {soon && <span className="badge-soon">Próximamente</span>}
-      </h3>
-      <p>{text}</p>
+      <div>
+        <h3>{title}</h3>
+        <p>{text}</p>
+      </div>
     </div>
+  );
+}
+
+function FAQItem({ question, answer }: { question: string; answer: string }) {
+  return (
+    <details className="faq-item">
+      <summary>
+        <FileText size={18} />
+        <span>{question}</span>
+      </summary>
+      <p>{answer}</p>
+    </details>
   );
 }
