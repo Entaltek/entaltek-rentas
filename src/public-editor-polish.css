@@ -10,7 +10,7 @@
   margin: 14px calc(50% - 50vw) 8px;
   padding: 10px max(18px, calc((100vw - 1680px) / 2 + 24px));
   overflow-x: auto;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   border-top: 1px solid rgba(1, 55, 98, 0.08);
   border-bottom: 1px solid rgba(1, 55, 98, 0.1);
   -webkit-backdrop-filter: blur(14px) saturate(1.18);
@@ -27,10 +27,10 @@
   min-width: max-content;
   flex: 1 1 0;
   padding: 9px 14px;
-  border: 1px solid rgba(1, 55, 98, 0.14);
+  border: 1px solid rgba(138, 31, 17, 0.18);
   border-radius: 999px;
-  background: white;
-  color: var(--muted);
+  background: rgba(255, 96, 72, 0.07);
+  color: #a05b55;
   font-size: 13px;
   font-weight: 900;
   transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition), box-shadow var(--transition);
@@ -42,13 +42,24 @@
   width: 23px;
   height: 23px;
   border-radius: 50%;
-  background: rgba(1, 55, 98, 0.08);
-  color: var(--tech);
+  background: rgba(255, 96, 72, 0.13);
+  color: #a05b55;
   font-size: 12px;
 }
 
+.editor-progress-label.is-pending {
+  border-color: rgba(138, 31, 17, 0.18);
+  background: rgba(255, 96, 72, 0.07);
+  color: #a05b55;
+}
+
+.editor-progress-label.is-pending > span {
+  background: rgba(255, 96, 72, 0.13);
+  color: #a05b55;
+}
+
 .editor-progress-label.is-complete {
-  border-color: rgba(14, 122, 78, 0.32);
+  border-color: rgba(14, 122, 78, 0.34);
   background: rgba(14, 122, 78, 0.12);
   color: #075f3c;
 }
@@ -67,6 +78,36 @@
 .completeness-bar,
 .completeness-label {
   display: none !important;
+}
+
+/* Ya existe barra de progreso horizontal; se eliminan las tabs duplicadas dentro del formulario. */
+.form-wizard-steps {
+  display: none !important;
+}
+
+.form-wizard {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.form-step-transition {
+  order: 1;
+}
+
+.step-recommendations {
+  order: 2;
+  margin-top: 14px;
+}
+
+.form-step-toolbar {
+  order: 3;
+  position: static !important;
+  top: auto !important;
+  margin: 12px 0 0;
+}
+
+.form-wizard-footer {
+  order: 4;
 }
 
 .property-card:not(.is-preview) {
@@ -136,6 +177,42 @@
   grid-column: 1 / -1;
 }
 
+/* Producto final: más compacto porque solo aparece cuando el formulario está completo. */
+.copy-product-card {
+  margin-top: 18px;
+  padding: 18px !important;
+  border-radius: 20px !important;
+}
+
+.copy-product-header {
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+.copy-product-header h2 {
+  margin: 4px 0 4px !important;
+  font-size: clamp(22px, 2.5vw, 28px) !important;
+}
+
+.copy-product-header .section-note {
+  max-width: 74ch;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.copy-product-badges {
+  justify-content: flex-start !important;
+  padding-top: 0 !important;
+}
+
+.copy-product-card textarea {
+  min-height: 170px !important;
+}
+
+.copy-actions {
+  gap: 8px !important;
+}
+
 @media (max-width: 1280px) {
   .property-card:not(.is-preview) .hero-grid.has-reel {
     grid-template-columns: 1fr;
@@ -170,5 +247,9 @@
   .editor-progress-label {
     flex: 0 0 auto;
     padding-inline: 12px;
+  }
+
+  .form-step-toolbar {
+    margin-top: 10px;
   }
 }
