@@ -7,6 +7,7 @@ import {
   Camera,
   Car,
   CheckCircle2,
+  FileText,
   GraduationCap,
   Hospital,
   MapPin,
@@ -19,7 +20,7 @@ import {
   Trees,
   UtensilsCrossed
 } from 'lucide-react';
-import type { NearbyPlaceType, Property } from '../types/property';
+import type { NearbyPlaceType, Property, PropertyPhoto } from '../types/property';
 import { NEARBY_PLACE_TYPE_LABELS, OPERATION_TYPE_LABELS, PROPERTY_TYPE_LABELS } from '../types/property';
 import { buildWhatsappUrl, formatLocationShort, formatPrice, formatPricePeriod, hasValidWhatsapp } from '../lib/format';
 import { sortPhotos } from '../lib/photos';
@@ -52,11 +53,19 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
 
   const activePhoto = photos.find((photo) => photo.id === activePhotoId) ?? photos[0];
   const secondaryPhotos = photos.filter((photo) => photo.id !== activePhoto?.id);
+  const visibleSecondaryPhotos = secondaryPhotos.slice(0, 2);
+  const showPhotoReel = photos.length > 3;
   const whatsappReady = hasValidWhatsapp(property.contact.whatsapp);
   const whatsappUrl = buildWhatsappUrl(property);
   const locationShort = formatLocationShort(property);
   const showAddress = property.location.showExactAddress && property.location.address.trim();
   const hasLocationDetails = locationShort || showAddress || property.location.references || property.location.nearbyPlaces.length > 0 || isPreview;
+  const featureTags = property.featureTags ?? [];
+  const amenities = property.amenities ?? [];
+  const servicesIncluded = property.servicesIncluded ?? [];
+  const requirements = property.requirements ?? [];
+  const requiredDocuments = property.requiredDocuments ?? [];
+  const expirationLabel = formatExpirationDate(property.expiresAt);
 
   const features = [
     property.bedrooms > 0 && { icon: <BedDouble size={18} />, label: `${property.bedrooms} recámara${property.bedrooms === 1 ? '' : 's'}` },
@@ -65,7 +74,8 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
     Boolean(property.areaM2) && { icon: <Ruler size={18} />, label: `${property.areaM2} m²` },
     property.furnished && { icon: <Sofa size={18} />, label: 'Amueblado' },
     property.petsAllowed && { icon: <PawPrint size={18} />, label: 'Acepta mascotas' },
-    Boolean(property.availableFrom.trim()) && { icon: <CalendarDays size={18} />, label: `Disponible: ${property.availableFrom}` }
+    Boolean(property.availableFrom.trim()) && { icon: <CalendarDays size={18} />, label: `Disponible: ${property.availableFrom}` },
+    ...featureTags.map((tag) => ({ icon: <CheckCircle2 size={18} />, label: tag }))
   ].filter(Boolean) as { icon: ReactNode; label: string }[];
 
   const conditions = [
@@ -77,36 +87,55 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
   return (
     <article className={`property-card ${isPreview ? 'is-preview' : ''}`} id={sectionId}>
       {(photos.length > 0 || isPreview) && (
-      <section className={`hero-grid ${photos.length ? '' : 'empty-gallery'} ${secondaryPhotos.length ? '' : 'single-photo'}`}>
-        {activePhoto ? (
-          <figure className="hero-figure" key={activePhoto.id}>
-            <img src={activePhoto.url} alt={activePhoto.alt || activePhoto.title || `Foto principal de ${property.title}`} className="hero-image" />
-            {activePhoto.title && <figcaption className="photo-overlay">{activePhoto.title}</figcaption>}
-          </figure>
-        ) : (
-          <div className="image-placeholder hero-image">
-            <Camera size={34} />
-            <strong>Aquí van tus fotos</strong>
-            <span>Sube fotos en el editor y esta galería se arma sola.</span>
-          </div>
-        )}
-        {secondaryPhotos.length > 0 && (
-          <div className="gallery-column">
-            {secondaryPhotos.slice(0, 4).map((photo) => (
-              <button
-                key={photo.id}
-                type="button"
-                className="gallery-thumb"
-                onClick={() => setActivePhotoId(photo.id)}
-                aria-label={`Ver foto: ${photo.title || 'de la propiedad'}`}
-              >
-                <img src={photo.url} alt={photo.alt || photo.title || `Foto de ${property.title}`} loading="lazy" />
-                {photo.title && <span className="photo-overlay">{photo.title}</span>}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+        <>
+          <section className={`hero-grid ${photos.length ? '' : 'empty-gallery'} ${visibleSecondaryPhotos.length ? '' : 'single-photo'} ${showPhotoReel ? 'has-reel' : ''}`}>
+            {activePhoto ? (
+              <figure className="hero-figure" key={activePhoto.id}>
+                <img src={activePhoto.url} alt={activePhoto.alt || activePhoto.title || `Foto principal de ${property.title}`} className="hero-image" />
+                <HeroSummaryCard property={property} locationShort={locationShort} activePhoto={activePhoto} isPreview={isPreview} />
+              </figure>
+            ) : (
+              <div className="image-placeholder hero-image">
+                <Camera size={34} />
+                <strong>Aquí van tus fotos</strong>
+                <span>Sube fotos en el editor y esta galería se arma sola.</span>
+              </div>
+            )}
+            {visibleSecondaryPhotos.length > 0 && (
+              <div className="gallery-column">
+                {visibleSecondaryPhotos.map((photo) => (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    className="gallery-thumb"
+                    onClick={() => setActivePhotoId(photo.id)}
+                    aria-label={`Ver foto: ${photo.title || 'de la propiedad'}`}
+                  >
+                    <img src={photo.url} alt={photo.alt || photo.title || `Foto de ${property.title}`} loading="lazy" />
+                    {photo.title && <span className="photo-overlay">{photo.title}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {showPhotoReel && (
+            <div className="photo-reel" aria-label="Más fotos de la propiedad">
+              {photos.map((photo, index) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  className={`photo-reel-item ${photo.id === activePhoto?.id ? 'is-active' : ''}`}
+                  onClick={() => setActivePhotoId(photo.id)}
+                  aria-label={`Ver foto ${index + 1}: ${photo.title || 'de la propiedad'}`}
+                >
+                  <img src={photo.url} alt="" loading="lazy" />
+                  <span>{photo.title || `Foto ${index + 1}`}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {photos.length > 1 && (
@@ -143,8 +172,8 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
             <section className="landing-block landing-block-compact">
               <h2>Características principales</h2>
               <div className="feature-grid">
-                {features.map((feature) => (
-                  <Feature key={feature.label} icon={feature.icon} label={feature.label} />
+                {features.map((feature, index) => (
+                  <Feature key={`${feature.label}-${index}`} icon={feature.icon} label={feature.label} />
                 ))}
               </div>
             </section>
@@ -200,29 +229,40 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
             </section>
           )}
 
-          {property.amenities.length > 0 && (
+          {amenities.length > 0 && (
             <section className="landing-block">
               <h2>Amenidades</h2>
               <ul className="pill-list">
-                {property.amenities.map((item) => <li key={item}>{item}</li>)}
+                {amenities.map((item) => <li key={item}>{item}</li>)}
               </ul>
             </section>
           )}
 
-          {property.servicesIncluded.length > 0 && (
+          {servicesIncluded.length > 0 && (
             <section className="landing-block">
               <h2>Servicios incluidos</h2>
               <ul className="pill-list">
-                {property.servicesIncluded.map((item) => <li key={item}>{item}</li>)}
+                {servicesIncluded.map((item) => <li key={item}>{item}</li>)}
               </ul>
             </section>
           )}
 
-          {property.requirements.length > 0 && (
+          {requiredDocuments.length > 0 && (
+            <section className="landing-block">
+              <h2>Documentos requeridos</h2>
+              <ul className="check-list document-list">
+                {requiredDocuments.map((item) => (
+                  <li key={item}><FileText size={18} /> {item}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {requirements.length > 0 && (
             <section className="landing-block">
               <h2>Requisitos</h2>
               <ul className="check-list">
-                {property.requirements.map((item) => (
+                {requirements.map((item) => (
                   <li key={item}><CheckCircle2 size={18} /> {item}</li>
                 ))}
               </ul>
@@ -247,6 +287,9 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
           )}
           {property.contact.name && <p className="contact-name">Te atiende: {property.contact.name}</p>}
           <small>Información proporcionada por el anunciante. Verifica la propiedad antes de realizar cualquier pago.</small>
+          <small className="expiry-note">
+            Esta publicación se elimina automáticamente después de 30 días{expirationLabel ? ` (vence el ${expirationLabel})` : ''}.
+          </small>
         </aside>
       </section>
 
@@ -262,6 +305,34 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
         </div>
       )}
     </article>
+  );
+}
+
+function HeroSummaryCard({
+  property,
+  locationShort,
+  activePhoto,
+  isPreview
+}: {
+  property: Property;
+  locationShort: string;
+  activePhoto: PropertyPhoto;
+  isPreview: boolean;
+}) {
+  return (
+    <div className="hero-summary-card">
+      {activePhoto.title && <span className="hero-space-chip">{activePhoto.title}</span>}
+      <p className="eyebrow">
+        {PROPERTY_TYPE_LABELS[property.propertyType]} · {OPERATION_TYPE_LABELS[property.operationType]}
+      </p>
+      <h1>{property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}</h1>
+      {(locationShort || isPreview) && (
+        <span className="hero-summary-location"><MapPin size={15} /> {locationShort || 'Colonia, ciudad y estado'}</span>
+      )}
+      {(property.description || isPreview) && (
+        <p>{property.description || 'Describe aquí estado, beneficios y detalles importantes de la propiedad.'}</p>
+      )}
+    </div>
   );
 }
 
@@ -300,6 +371,18 @@ function PropertyMap({ property, isPreview }: { property: Property; isPreview: b
       </div>
     </div>
   );
+}
+
+function formatExpirationDate(expiresAt?: string): string {
+  if (!expiresAt) return '';
+  const date = new Date(expiresAt);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('es-MX', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(date);
 }
 
 function Feature({ icon, label }: { icon: ReactNode; label: string }) {
