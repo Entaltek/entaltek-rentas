@@ -3,7 +3,6 @@ import {
   Bath,
   BedDouble,
   Camera,
-  CheckCircle2,
   FileText,
   ImageIcon,
   Link2,
@@ -33,63 +32,29 @@ export function HomePage() {
           <div className="intro-copy">
             <h1>Crea una publicación profesional para rentar tu propiedad</h1>
             <p>
-              Convierte la información de tu inmueble en una landing clara, visual y lista para compartir.
+              Convierte la información de tu inmueble en una página clara, visual y lista para compartir.
               Sube fotos, agrega precio, condiciones, ubicación desde Google Maps, requisitos y contacto por
               WhatsApp para que cada interesado vea todo en un solo link.
             </p>
             <div className="hero-actions">
-              <a href="/crear" className="primary-button large">Generar landing para mi propiedad</a>
+              <a href="/crear" className="primary-button large">Generar página de mi propiedad</a>
               <a href="#ejemplo" className="secondary-button large">Ver publicación demo</a>
             </div>
             <ul className="hero-points">
               <li><Camera size={16} /> Galería profesional</li>
               <li><MapPin size={16} /> Ubicación y mapa</li>
               <li><MessageCircle size={16} /> Contacto directo por WhatsApp</li>
-              <li><Link2 size={16} /> Link compartible al instante</li>
+              <li><Link2 size={16} /> Link de la propiedad</li>
             </ul>
+            <SmartTourSpotlight compact />
           </div>
           <HeroPreview />
-        </section>
-
-        <section className="usage-summary" id="uso">
-          <div>
-            <p className="eyebrow">Uso rápido del sitio</p>
-            <h2>Publica mejor sin crear una página desde cero</h2>
-          </div>
-          <p>
-            Usa el editor para capturar los datos reales de tu propiedad, revisa la vista previa y genera un link
-            público. Ese link lo puedes pegar en Marketplace, grupos, WhatsApp o Instagram para enviar una
-            presentación más completa que una publicación normal.
-          </p>
-        </section>
-
-        <SmartTourSpotlight />
-
-        <section className="example-section" id="ejemplo">
-          <div className="section-heading example-heading">
-            <div>
-              <p className="eyebrow">Publicación demo</p>
-              <h2>Así se verá tu propiedad cuando la publiques</h2>
-            </div>
-            <p className="section-note">
-              Esta es una muestra visual. Cuando captures tu inmueble, la página se arma con tus fotos,
-              precio, ubicación, requisitos y contacto real para compartirla con un solo link.
-            </p>
-          </div>
-          <div className="example-frame">
-            <div className="example-frame-bar" aria-hidden="true">
-              <span className="dot" /><span className="dot" /><span className="dot" />
-              <span className="example-url"><Link2 size={13} /> entaltek.mx/r/tu-propiedad</span>
-              <span className="example-ready"><Send size={13} /> Link listo para compartir</span>
-            </div>
-            <PropertyLanding property={exampleProperty} variant="preview" />
-          </div>
         </section>
 
         <section className="how-section" id="como-funciona">
           <div className="section-heading">
             <p className="eyebrow">Cómo funciona</p>
-            <h2>Captura, revisa y comparte tu landing de renta</h2>
+            <h2>Captura, revisa y comparte tu página de renta</h2>
             <p className="section-note">
               El flujo está pensado como una secuencia: primero completas la información, luego revisas la vista
               previa y al final obtienes el link para compartir.
@@ -112,15 +77,36 @@ export function HomePage() {
               <span className="step-number">3</span>
               <Share2 size={22} />
               <h3>Publica y comparte</h3>
-              <p>Genera tu landing pública y comparte el link en Marketplace, grupos, WhatsApp o redes.</p>
+              <p>Genera tu página pública y comparte el link en Marketplace, grupos, WhatsApp o redes.</p>
             </div>
+          </div>
+        </section>
+
+        <section className="example-section" id="ejemplo">
+          <div className="section-heading example-heading">
+            <div>
+              <p className="eyebrow">Publicación demo</p>
+              <h2>Así se verá tu propiedad cuando la publiques</h2>
+            </div>
+            <p className="section-note">
+              Esta es una muestra visual. Cuando captures tu inmueble, la página se arma con tus fotos,
+              precio, ubicación, requisitos y contacto real para compartirla con un solo link.
+            </p>
+          </div>
+          <div className="example-frame">
+            <div className="example-frame-bar" aria-hidden="true">
+              <span className="dot" /><span className="dot" /><span className="dot" />
+              <span className="example-url"><Link2 size={13} /> entaltek.mx/r/tu-propiedad</span>
+              <span className="example-ready"><Send size={13} /> Link listo para compartir</span>
+            </div>
+            <PropertyLanding property={exampleProperty} variant="preview" />
           </div>
         </section>
 
         <section className="includes-section" id="incluye">
           <div className="section-heading">
             <p className="eyebrow">Qué incluye</p>
-            <h2>Información ordenada para que el interesado decida más rápido</h2>
+            <h2>Información ordenada</h2>
           </div>
           <div className="includes-list">
             <IncludeRow icon={<ImageIcon size={20} />} title="Galería profesional" text="Fotos grandes, ordenadas y con título: sala, cocina, recámaras y detalles importantes." />
@@ -138,11 +124,11 @@ export function HomePage() {
             <h2>Dudas rápidas antes de publicar</h2>
           </div>
           <div className="faq-grid">
-            <FAQItem question="¿La landing reemplaza Marketplace?" answer="No. La idea es usar Marketplace para atraer interesados y pegar tu link para mostrar la información completa." />
+            <FAQItem question="¿Esta página reemplaza Marketplace?" answer="No. La idea es usar Marketplace para atraer interesados y pegar tu link para mostrar la información completa." />
             <FAQItem question="¿Cada propiedad tiene su propio link?" answer="Sí. Al publicar se genera una URL propia para compartirla en redes, grupos o WhatsApp." />
             <FAQItem question="¿Puedo mostrar u ocultar el domicilio exacto?" answer="Sí. Puedes guardar la dirección y decidir si se muestra públicamente o solo como zona aproximada." />
             <FAQItem question="¿Necesito saber programar?" answer="No. El editor te guía para cargar fotos, precio, ubicación, requisitos y contacto." />
-            <FAQItem question="¿Qué pasa con el recorrido inteligente?" answer="Es una capacidad en desarrollo. Primero publicamos landings profesionales; después agregaremos experiencias visuales más avanzadas." />
+            <FAQItem question="¿Qué pasa con el recorrido inteligente?" answer="Es una capacidad en desarrollo. Primero puedes publicar páginas profesionales; después agregaremos experiencias visuales más avanzadas." />
           </div>
         </section>
       </main>
@@ -151,7 +137,7 @@ export function HomePage() {
   );
 }
 
-// Mockup compacto de la landing generada, para la columna derecha del hero.
+// Mockup compacto de la publicación generada, para la columna derecha del hero.
 function HeroPreview() {
   const photos = sortPhotos(exampleProperty.photos);
   const [cover, ...rest] = photos;
@@ -209,7 +195,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         <FileText size={18} />
         <span>{question}</span>
       </summary>
-      <p>{answer}</p>
+      <div className="faq-answer"><p>{answer}</p></div>
     </details>
   );
 }
