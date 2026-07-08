@@ -19,6 +19,11 @@ export interface QualityResult {
 }
 
 export function calculateListingQuality(property: Property): QualityResult {
+  const amenities = property.amenities ?? [];
+  const servicesIncluded = property.servicesIncluded ?? [];
+  const requirements = property.requirements ?? [];
+  const requiredDocuments = property.requiredDocuments ?? [];
+
   const checks: QualityCheck[] = [
     createCheck({
       id: 'title',
@@ -37,8 +42,8 @@ export function calculateListingQuality(property: Property): QualityResult {
     createCheck({
       id: 'description',
       label: 'Descripción convincente',
-      weight: 14,
-      earned: scoreTextLength(property.description, 60, 140, 14),
+      weight: 12,
+      earned: scoreTextLength(property.description, 60, 140, 12),
       recommendation: 'Amplía la descripción con estado del inmueble, beneficios, tipo de inquilino ideal y detalles prácticos.'
     }),
     createCheck({
@@ -65,21 +70,28 @@ export function calculateListingQuality(property: Property): QualityResult {
     createCheck({
       id: 'requirements',
       label: 'Requisitos definidos',
-      weight: 8,
-      earned: scoreList(property.requirements, 1, 3, 8),
-      recommendation: 'Agrega requisitos como identificación, comprobante de ingresos, depósito o aval.'
+      weight: 7,
+      earned: scoreListPresence(requirements, 7),
+      recommendation: 'Agrega al menos un requisito, por ejemplo depósito, aval, contrato mínimo o póliza jurídica.'
+    }),
+    createCheck({
+      id: 'requiredDocuments',
+      label: 'Documentos requeridos',
+      weight: 7,
+      earned: scoreListPresence(requiredDocuments, 7),
+      recommendation: 'Agrega al menos un documento requerido, por ejemplo INE, comprobante de ingresos o referencias.'
     }),
     createCheck({
       id: 'amenities',
       label: 'Amenidades y servicios',
-      weight: 8,
-      earned: scoreList([...property.amenities, ...property.servicesIncluded], 2, 5, 8),
-      recommendation: 'Agrega amenidades y servicios incluidos: cocina, estacionamiento, seguridad, agua, internet.'
+      weight: 7,
+      earned: scoreListPresence([...amenities, ...servicesIncluded], 7),
+      recommendation: 'Agrega al menos una amenidad o servicio incluido; no necesitas llenar una lista larga.'
     }),
     createCheck({
       id: 'propertyDetails',
       label: 'Datos básicos del inmueble',
-      weight: 8,
+      weight: 5,
       earned: scorePropertyDetails(property),
       recommendation: 'Completa recámaras, baños, estacionamientos y metros cuadrados si los conoces.'
     })
@@ -119,7 +131,7 @@ function getPhotoRecommendation(count: number): string {
   if (count < 4) {
     return 'Agrega más fotos: sala, cocina, recámaras, baño y fachada.';
   }
-  return 'Agrega al menos 6 fotos claras para que la landing se sienta completa.';
+  return 'Con 4 o más fotos ya hay suficiente base; agrega más solo si ayudan a entender mejor la propiedad.';
 }
 
 function scoreTextLength(text: string, minimum: number, ideal: number, weight: number): number {
@@ -131,12 +143,8 @@ function scoreTextLength(text: string, minimum: number, ideal: number, weight: n
   return 0;
 }
 
-function scoreList(items: string[], minimum: number, ideal: number, weight: number): number {
-  const count = items.filter((item) => item.trim().length > 0).length;
-
-  if (count >= ideal) return weight;
-  if (count >= minimum) return Math.round(weight * (count / ideal));
-  return 0;
+function scoreListPresence(items: string[], weight: number): number {
+  return items.some((item) => item.trim().length > 0) ? weight : 0;
 }
 
 function scoreLocation(property: Property): number {
@@ -152,10 +160,10 @@ function scoreLocation(property: Property): number {
 
 function scorePropertyDetails(property: Property): number {
   const detailScores = [
-    property.bedrooms > 0 || property.propertyType === 'local' || property.propertyType === 'oficina' ? 2 : 0,
-    property.bathrooms > 0 ? 2 : 0,
-    property.areaM2 && property.areaM2 > 0 ? 2 : 0,
-    property.availableFrom.trim().length > 2 ? 2 : 0
+    property.bedrooms > 0 || property.propertyType === 'local' || property.propertyType === 'oficina' ? 1.25 : 0,
+    property.bathrooms > 0 ? 1.25 : 0,
+    property.areaM2 && property.areaM2 > 0 ? 1.25 : 0,
+    property.availableFrom.trim().length > 2 ? 1.25 : 0
   ];
 
   return detailScores.reduce((sum, value) => sum + value, 0);
