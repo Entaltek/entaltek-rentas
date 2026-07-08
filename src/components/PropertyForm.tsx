@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
 import type {
-  BathroomType,
   ContractUnit,
   OperationType,
   ParkingType,
@@ -10,17 +9,14 @@ import type {
   Property,
   PropertyLocation,
   PropertyRoomDetail,
-  PropertyType,
-  RoomType
+  PropertyType
 } from '../types/property';
 import {
-  BATHROOM_TYPE_LABELS,
   CONTRACT_UNIT_LABELS,
   OPERATION_TYPE_LABELS,
   PARKING_TYPE_LABELS,
   PARKING_VEHICLE_SIZE_LABELS,
-  PROPERTY_TYPE_LABELS,
-  ROOM_TYPE_LABELS
+  PROPERTY_TYPE_LABELS
 } from '../types/property';
 import { hasValidWhatsapp } from '../lib/format';
 import { listFromText, safeNumber, textFromList } from '../lib/propertyDraft';
@@ -44,8 +40,6 @@ const PRICE_PERIOD_OPTIONS: { value: PricePeriod; label: string }[] = [
 const CONTRACT_UNITS = Object.entries(CONTRACT_UNIT_LABELS) as [ContractUnit, string][];
 const PARKING_OPTIONS = Object.entries(PARKING_TYPE_LABELS) as [ParkingType, string][];
 const PARKING_SIZE_OPTIONS = Object.entries(PARKING_VEHICLE_SIZE_LABELS) as [ParkingVehicleSize, string][];
-const BATHROOM_OPTIONS = Object.entries(BATHROOM_TYPE_LABELS) as [BathroomType, string][];
-const ROOM_OPTIONS = Object.entries(ROOM_TYPE_LABELS) as [RoomType, string][];
 
 const STATE_CITY_OPTIONS: Record<string, string[]> = {
   'Guanajuato': ['León', 'Irapuato', 'Celaya', 'Salamanca', 'Guanajuato', 'Silao'],
@@ -64,8 +58,6 @@ export function PropertyForm({ property, onChange, footer }: Props) {
   const requirements = property.requirements ?? [];
   const requiredDocuments = property.requiredDocuments ?? [];
   const parkingTypes = property.parkingTypes ?? [];
-  const bathroomTypes = property.bathroomTypes ?? [];
-  const roomTypes = property.roomTypes ?? [];
   const cityOptions = STATE_CITY_OPTIONS[property.location.state] ?? [];
   const hasBathroomDetails = Boolean((property.fullBathrooms ?? 0) + (property.halfBathrooms ?? 0) + (property.sharedBathrooms ?? 0));
 
@@ -419,22 +411,6 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               />
             </div>
           )}
-          <CheckboxGroup
-            label="Tipo general de recámara"
-            options={ROOM_OPTIONS}
-            values={roomTypes}
-            onChange={(next) => updateField('roomTypes', next)}
-          />
-          <div className="contract-field full">
-            <label>
-              Personas por recámara
-              <input value={property.peoplePerRoom ?? ''} inputMode="numeric" placeholder="1" onChange={(event) => updateField('peoplePerRoom', event.target.value ? safeNumber(event.target.value) : undefined)} />
-            </label>
-            <label>
-              Cuartos compartidos
-              <input value={property.sharedRooms ?? ''} inputMode="numeric" placeholder="0" onChange={(event) => updateField('sharedRooms', event.target.value ? safeNumber(event.target.value) : undefined)} />
-            </label>
-          </div>
           <div className="toggle-row full">
             <label className="toggle-label">
               <input type="checkbox" checked={Boolean(property.isSharedProperty)} onChange={(event) => updateField('isSharedProperty', event.target.checked)} />
@@ -462,12 +438,6 @@ export function PropertyForm({ property, onChange, footer }: Props) {
               <input value={property.sharedBathrooms ?? ''} inputMode="numeric" placeholder="0" onChange={(event) => updateBathroomCount('sharedBathrooms', safeNumber(event.target.value))} />
             </label>
           </fieldset>
-          <CheckboxGroup
-            label="Tipo general de baño"
-            options={BATHROOM_OPTIONS}
-            values={bathroomTypes}
-            onChange={(next) => updateField('bathroomTypes', next)}
-          />
           <CheckboxGroup
             label="Estacionamiento"
             options={PARKING_OPTIONS}
@@ -573,7 +543,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
         </>
       )
     }
-  ], [property, featureTags, servicesIncluded, amenities, requirements, requiredDocuments, parkingTypes, bathroomTypes, roomTypes, cityOptions, hasBathroomDetails]);
+  ], [property, featureTags, servicesIncluded, amenities, requirements, requiredDocuments, parkingTypes, cityOptions, hasBathroomDetails]);
 
   const currentStep = steps[activeStep];
   const isFirstStep = activeStep === 0;
