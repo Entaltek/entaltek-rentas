@@ -24,8 +24,8 @@ app.add_middleware(
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
 app.include_router(health.router)
-app.include_router(properties.router, prefix="/api/v1")
-app.include_router(leads.router, prefix="/api/v1")
+app.include_router(properties.router, prefix="/api")
+app.include_router(leads.router, prefix="/api")
 
 # Serve local media files (only when using local storage backend)
 if settings.STORAGE_BACKEND == "local":
