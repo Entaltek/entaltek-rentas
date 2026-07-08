@@ -123,22 +123,35 @@ mypy app/
 | GET | `/health` | Estado de la API |
 
 ### Propiedades
+
+El body de entrada/salida es el documento `Property` completo en **camelCase**,
+exactamente el mismo modelo que usa el frontend (`src/types/property.ts`):
+incluye `location` (con `showExactAddress` y `nearbyPlaces`), `contact` y
+`photos` con título/portada/orden. Las fotos pueden venir como `data:image/...`
+(se materializan en el storage y se devuelven como URL pública) o como URL ya
+almacenada.
+
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/api/v1/properties` | Crear propiedad (estado draft) |
-| GET | `/api/v1/properties/{slug}` | Obtener propiedad pública por slug |
-| PATCH | `/api/v1/properties/{property_id}` | Actualizar propiedad |
-| POST | `/api/v1/properties/{property_id}/publish` | Publicar y generar slug |
-| POST | `/api/v1/properties/{property_id}/archive` | Archivar propiedad |
-| POST | `/api/v1/properties/{property_id}/images` | Subir imágenes (multipart) |
-| DELETE | `/api/v1/properties/{property_id}/images/{image_id}` | Eliminar imagen |
+| GET | `/api/properties` | Listar propiedades (más recientes primero) |
+| POST | `/api/properties` | Crear propiedad (estado draft) |
+| GET | `/api/properties/{property_id}` | Obtener propiedad por id |
+| GET | `/api/properties/slug/{slug}` | Obtener por slug (cualquier status; el frontend distingue "no activa") |
+| PUT | `/api/properties/{property_id}` | Actualizar propiedad (documento completo) |
+| PATCH | `/api/properties/{property_id}/publish` | Publicar: valida mínimos y genera slug |
+| PATCH | `/api/properties/{property_id}/unpublish` | Despublicar |
+| DELETE | `/api/properties/{property_id}` | Eliminar propiedad y sus fotos del storage |
+
+Validación mínima para publicar: título, precio > 0, ciudad, colonia o
+domicilio, y WhatsApp de al menos 10 dígitos (los errores regresan en `detail`,
+en español).
 
 ### Leads
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/api/v1/leads` | Crear lead desde landing pública |
-| GET | `/api/v1/properties/{property_id}/leads` | Listar leads de una propiedad |
-| PATCH | `/api/v1/leads/{lead_id}/status` | Actualizar estado de lead |
+| POST | `/api/leads` | Crear lead desde landing pública |
+| GET | `/api/properties/{property_id}/leads` | Listar leads de una propiedad |
+| PATCH | `/api/leads/{lead_id}/status` | Actualizar estado de lead |
 
 ---
 
