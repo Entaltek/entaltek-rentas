@@ -6,6 +6,7 @@ import { PublicPropertyPage } from './pages/PublicPropertyPage';
 import './styles.css';
 import './layout-overrides.css';
 import './ux-overrides.css';
+import './home-polish.css';
 
 function App() {
   const path = window.location.pathname;
