@@ -26,11 +26,11 @@ export const exampleProperty: Property = {
   areaM2: 78,
   furnished: true,
   petsAllowed: false,
+  featureTags: ['Vista panorámica', 'Elevador', 'Vigilancia 24/7'],
   servicesIncluded: ['Agua', 'Mantenimiento', 'Internet'],
   amenities: ['Cocina equipada', 'Closet', 'Estacionamiento techado', 'Zona tranquila', 'Balcón'],
+  requiredDocuments: ['Identificación oficial', 'Comprobante de ingresos'],
   requirements: [
-    'Identificación oficial',
-    'Comprobante de ingresos',
     'Un mes de depósito',
     'Contrato mínimo de 12 meses'
   ],
