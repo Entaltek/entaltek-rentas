@@ -14,7 +14,7 @@ main {
 }
 
 .intro {
-  grid-template-columns: minmax(420px, 0.95fr) minmax(540px, 1.05fr);
+  grid-template-columns: minmax(420px, 0.82fr) minmax(620px, 1.18fr);
   gap: clamp(40px, 6vw, 96px);
   padding-top: clamp(54px, 6vw, 86px);
 }
@@ -24,8 +24,12 @@ main {
 }
 
 .hero-preview {
-  max-width: 620px;
+  max-width: 760px;
   justify-self: end;
+}
+
+.hero-preview-media img {
+  height: clamp(280px, 27vw, 420px);
 }
 
 .problem-strip,
@@ -116,6 +120,223 @@ main {
   font-size: clamp(32px, 3.2vw, 48px);
 }
 
+/* Hero: se eliminó el strip separado de problema/solución y se compactó en el texto principal. */
+.problem-strip {
+  display: none;
+}
+
+/* Editor: el preview ocupa más espacio porque es lo que vende la idea al usuario. */
+.editor-page {
+  width: min(1780px, 98vw);
+}
+
+.editor-layout {
+  grid-template-columns: minmax(420px, 0.82fr) minmax(680px, 1.18fr);
+  gap: clamp(24px, 3vw, 44px);
+}
+
+.editor-preview-col {
+  top: 78px;
+}
+
+.preview-frame {
+  max-height: calc(100vh - 124px);
+  box-shadow: var(--shadow-soft);
+  background: white;
+}
+
+.preview-frame .hero-grid {
+  height: clamp(360px, 33vw, 560px);
+}
+
+.preview-frame .property-content {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 22px;
+  padding: 30px;
+}
+
+.preview-frame .property-main h1 {
+  max-width: 18ch;
+  font-size: clamp(30px, 2.5vw, 42px);
+}
+
+.preview-frame .contact-card {
+  position: sticky;
+  top: 18px;
+}
+
+/* Formulario guiado por pantallas. */
+.form-wizard {
+  display: grid;
+  gap: 16px;
+}
+
+.form-wizard-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+}
+
+.wizard-step:hover {
+  transform: translateY(-1px);
+  border-color: rgba(1, 121, 177, 0.35);
+}
+
+.wizard-step.is-active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+
+.wizard-step.is-complete:not(.is-active) {
+  background: var(--success-bg);
+  border-color: rgba(16, 163, 105, 0.24);
+  color: var(--success);
+}
+
+.wizard-step-index {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 50%;
+  background: rgba(1, 55, 98, 0.08);
+}
+
+.wizard-step.is-active .wizard-step-index {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.form-wizard-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-wizard-actions .secondary-button,
+.form-wizard-actions .primary-button {
+  min-height: 40px;
+  padding: 9px 16px;
+}
+
+.form-note.full {
+  grid-column: 1 / -1;
+}
+
+/* Mapa dentro de la landing pública y preview. */
+.property-map {
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+  margin: 16px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(71, 218, 214, 0.14), rgba(1, 55, 98, 0.07));
+  box-shadow: var(--shadow-soft);
+}
+
+.property-map iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: 0;
+}
+
+.property-map-placeholder {
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+.map-grid-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.65;
+  background-image:
+    linear-gradient(rgba(1, 55, 98, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(1, 55, 98, 0.09) 1px, transparent 1px),
+    radial-gradient(circle at 25% 35%, rgba(71, 218, 214, 0.34), transparent 24%),
+    radial-gradient(circle at 78% 68%, rgba(1, 121, 177, 0.2), transparent 22%);
+  background-size: 38px 38px, 38px 38px, 100% 100%, 100% 100%;
+}
+
+.map-pin {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 86px;
+  border-radius: 50% 50% 50% 12px;
+  background: var(--navy);
+  color: white;
+  transform: rotate(-45deg);
+  box-shadow: 0 12px 24px rgba(1, 55, 98, 0.24);
+}
+
+.map-pin svg {
+  transform: rotate(45deg);
+}
+
+.map-copy {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--muted);
+  backdrop-filter: blur(10px);
+}
+
+.map-copy strong {
+  color: var(--navy);
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+.map-copy span {
+  color: var(--tech);
+  font-weight: 700;
+}
+
+.map-copy small {
+  font-size: 13px;
+}
+
+.landing-block-compact {
+  margin-bottom: 24px;
+}
+
 @media (min-width: 1500px) {
   .property-content {
     grid-template-columns: minmax(0, 1fr) 380px;
@@ -123,6 +344,28 @@ main {
 
   .hero-grid {
     grid-template-columns: minmax(0, 2.2fr) minmax(390px, 1fr);
+  }
+}
+
+@media (max-width: 1280px) {
+  .editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-preview-col {
+    position: static;
+  }
+
+  .preview-toggle {
+    display: inline-flex;
+  }
+
+  .editor-preview-col:not(.is-open) .preview-frame {
+    display: none;
+  }
+
+  .form-wizard-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -168,11 +411,36 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .property-content {
+  .property-content,
+  .preview-frame .property-content {
+    grid-template-columns: 1fr;
     padding: 28px 18px 34px;
+  }
+
+  .preview-frame .contact-card {
+    position: static;
   }
 
   .property-main h1 {
     font-size: clamp(30px, 9vw, 40px);
+  }
+
+  .form-wizard-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-step {
+    border-radius: 16px;
+  }
+
+  .form-wizard-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .property-map,
+  .property-map iframe {
+    min-height: 230px;
+    height: 260px;
   }
 }
