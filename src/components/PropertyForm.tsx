@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Contact2, Home, ImageIcon, ListChecks, MapPin, Wallet } from 'lucide-react';
 import type {
   OperationType,
@@ -17,6 +17,7 @@ import { SmartTourTeaser } from './SmartTourTeaser';
 interface Props {
   property: Property;
   onChange: (property: Property) => void;
+  footer?: ReactNode;
 }
 
 const PROPERTY_TYPE_OPTIONS = Object.entries(PROPERTY_TYPE_LABELS) as [PropertyType, string][];
@@ -27,8 +28,13 @@ const PRICE_PERIOD_OPTIONS: { value: PricePeriod; label: string }[] = [
   { value: 'daily', label: 'Diaria' }
 ];
 
-export function PropertyForm({ property, onChange }: Props) {
+export function PropertyForm({ property, onChange, footer }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const featureTags = property.featureTags ?? [];
+  const servicesIncluded = property.servicesIncluded ?? [];
+  const amenities = property.amenities ?? [];
+  const requirements = property.requirements ?? [];
+  const requiredDocuments = property.requiredDocuments ?? [];
 
   function updateField<K extends keyof Property>(key: K, value: Property[K]) {
     onChange({ ...property, [key]: value });
@@ -147,14 +153,14 @@ export function PropertyForm({ property, onChange }: Props) {
               Mantenimiento incluido
             </label>
           </div>
-          <label className={`full ${ok(property.servicesIncluded.length > 0)}`}>
-            Servicios incluidos, uno por línea
-            <textarea
-              value={textFromList(property.servicesIncluded)}
-              placeholder={'Agua\nInternet\nGas'}
-              onChange={(event) => updateField('servicesIncluded', listFromText(event.target.value))}
-            />
-          </label>
+          <TagTextarea
+            label="Servicios incluidos"
+            value={servicesIncluded}
+            placeholder="Agua, internet, mantenimiento"
+            help="Separa por comas o saltos de línea. Cada elemento se convierte en una etiqueta."
+            valid={servicesIncluded.length > 0}
+            onChange={(items) => updateField('servicesIncluded', items)}
+          />
         </>
       )
     },
@@ -224,8 +230,8 @@ export function PropertyForm({ property, onChange }: Props) {
       id: 'caracteristicas',
       icon: <ListChecks size={18} />,
       title: 'Características y requisitos',
-      subtitle: 'Ordena los datos duros antes de amenidades y requisitos.',
-      isComplete: property.bedrooms > 0 && property.bathrooms > 0 && property.amenities.length > 0 && property.requirements.length > 0,
+      subtitle: 'Datos duros, etiquetas, documentos y requisitos.',
+      isComplete: property.bedrooms > 0 && property.bathrooms > 0 && amenities.length > 0 && requirements.length > 0 && requiredDocuments.length > 0,
       content: (
         <>
           <label className={ok(property.bedrooms > 0)}>
@@ -259,22 +265,38 @@ export function PropertyForm({ property, onChange }: Props) {
               Acepta mascotas
             </label>
           </div>
-          <label className={`full ${ok(property.amenities.length > 0)}`}>
-            Amenidades, una por línea
-            <textarea
-              value={textFromList(property.amenities)}
-              placeholder={'Cocina equipada\nClóset\nZona tranquila'}
-              onChange={(event) => updateField('amenities', listFromText(event.target.value))}
-            />
-          </label>
-          <label className={`full ${ok(property.requirements.length > 0)}`}>
-            Requisitos, uno por línea
-            <textarea
-              value={textFromList(property.requirements)}
-              placeholder={'Identificación oficial\nComprobante de ingresos\nUn mes de depósito'}
-              onChange={(event) => updateField('requirements', listFromText(event.target.value))}
-            />
-          </label>
+          <TagTextarea
+            label="Características adicionales"
+            value={featureTags}
+            placeholder="Vigilancia 24/7, roof garden, elevador, vista panorámica"
+            help="Úsalas para datos que no están en los botones anteriores."
+            valid={featureTags.length > 0}
+            onChange={(items) => updateField('featureTags', items)}
+          />
+          <TagTextarea
+            label="Amenidades"
+            value={amenities}
+            placeholder="Cocina equipada, clóset, balcón, zona tranquila"
+            help="Con una amenidad basta para completar el punto de calidad."
+            valid={amenities.length > 0}
+            onChange={(items) => updateField('amenities', items)}
+          />
+          <TagTextarea
+            label="Documentos requeridos"
+            value={requiredDocuments}
+            placeholder="INE, comprobante de ingresos, referencias"
+            help="Se valida por separado para que el interesado sepa qué preparar."
+            valid={requiredDocuments.length > 0}
+            onChange={(items) => updateField('requiredDocuments', items)}
+          />
+          <TagTextarea
+            label="Requisitos de renta o venta"
+            value={requirements}
+            placeholder="Un mes de depósito, contrato mínimo de 12 meses, aval"
+            help="Separa por comas. No necesitas llenar una lista larga."
+            valid={requirements.length > 0}
+            onChange={(items) => updateField('requirements', items)}
+          />
         </>
       )
     },
@@ -350,8 +372,56 @@ export function PropertyForm({ property, onChange }: Props) {
             Siguiente <ChevronRight size={17} />
           </button>
         </div>
+
+        {footer && <div className="form-wizard-footer">{footer}</div>}
       </div>
     </form>
+  );
+}
+
+function TagTextarea({
+  label,
+  value,
+  placeholder,
+  help,
+  valid,
+  onChange
+}: {
+  label: string;
+  value: string[];
+  placeholder: string;
+  help: string;
+  valid: boolean;
+  onChange: (items: string[]) => void;
+}) {
+  const [draft, setDraft] = useState(() => textFromList(value));
+
+  useEffect(() => {
+    const draftTags = listFromText(draft).join('|');
+    const valueTags = value.join('|');
+
+    if (draftTags !== valueTags) {
+      setDraft(textFromList(value));
+    }
+  }, [draft, value]);
+
+  function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const next = event.target.value;
+    setDraft(next);
+    onChange(listFromText(next));
+  }
+
+  return (
+    <label className={`full ${valid ? 'is-valid' : ''}`}>
+      {label}
+      <textarea value={draft} placeholder={placeholder} onChange={handleChange} />
+      <small className="field-help">{help}</small>
+      {value.length > 0 && (
+        <ul className="inline-tag-list" aria-label={`${label} agregados`}>
+          {value.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      )}
+    </label>
   );
 }
 
