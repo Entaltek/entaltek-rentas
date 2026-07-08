@@ -33,12 +33,26 @@ export function cleanWhatsapp(raw: string): string {
   return raw.replace(/\D/g, '');
 }
 
+export function normalizeMexicoWhatsapp(raw: string): string {
+  const digits = cleanWhatsapp(raw);
+
+  // Si el usuario captura los 10 dígitos nacionales, agregamos México (52).
+  // WhatsApp usa solo números en la URL, sin el símbolo +.
+  if (digits.length === 10) return `52${digits}`;
+
+  // Si ya capturó +52 / 52, se conserva.
+  if (digits.startsWith('52') && digits.length >= 12) return digits;
+
+  return digits;
+}
+
 export function hasValidWhatsapp(raw: string): boolean {
-  return cleanWhatsapp(raw).length >= 10;
+  const phone = normalizeMexicoWhatsapp(raw);
+  return phone.length >= 12;
 }
 
 export function buildWhatsappUrl(property: Property): string {
-  const phone = cleanWhatsapp(property.contact.whatsapp);
+  const phone = normalizeMexicoWhatsapp(property.contact.whatsapp);
   const message = `Hola, vi la propiedad "${property.title || 'en renta'}" en Entaltek Rentas. ¿Sigue disponible?`;
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
