@@ -51,6 +51,9 @@ const STATE_CITY_OPTIONS: Record<string, string[]> = {
 
 export function PropertyForm({ property, onChange, footer }: Props) {
   const [activeStep, setActiveStep] = useState(0);
+  const [isStepLeaving, setIsStepLeaving] = useState(false);
+  const stepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transitionLockRef = useRef(false);
   const formStartRef = useRef<HTMLDivElement>(null);
   const featureTags = property.featureTags ?? [];
   const servicesIncluded = property.servicesIncluded ?? [];
@@ -148,9 +151,20 @@ export function PropertyForm({ property, onChange, footer }: Props) {
     }, 0);
   }
 
+  useEffect(() => () => { if (stepTimerRef.current) window.clearTimeout(stepTimerRef.current); }, []);
+
   function goToStep(index: number) {
-    setActiveStep(index);
-    scrollToStepTop();
+    if (index === activeStep || transitionLockRef.current) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) { setActiveStep(index); scrollToStepTop(); return; }
+    transitionLockRef.current = true;
+    setIsStepLeaving(true);
+    stepTimerRef.current = window.setTimeout(() => {
+      setActiveStep(index);
+      setIsStepLeaving(false);
+      transitionLockRef.current = false;
+      scrollToStepTop();
+    }, 150);
   }
 
   function scrollToPublishSection() {
@@ -593,7 +607,7 @@ export function PropertyForm({ property, onChange, footer }: Props) {
           </div>
         </div>
 
-        <div className="form-step-transition" key={currentStep.id}>
+        <div className={`form-step-transition ${isStepLeaving ? 'is-leaving' : ''}`} key={currentStep.id}>
           <FormSection icon={currentStep.icon} title={currentStep.title} subtitle={currentStep.subtitle}>
             {currentStep.content}
           </FormSection>
