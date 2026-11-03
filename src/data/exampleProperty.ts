@@ -50,7 +50,7 @@ export const exampleProperty: Property = {
     ]
   },
   contact: {
-    name: 'Asesor Entaltek',
+    name: 'Asesor de ejemplo',
     whatsapp: '524771234567'
   },
   photos: [

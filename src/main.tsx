@@ -10,6 +10,7 @@ import './home-polish.css';
 import './property-flow-polish.css';
 import './form-copy-polish.css';
 import './public-editor-polish.css';
+import './umbral.css';
 
 function App() {
   const path = window.location.pathname;

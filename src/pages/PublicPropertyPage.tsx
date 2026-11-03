@@ -61,31 +61,31 @@ export function PublicPropertyPage({ slug }: Props) {
         {status === 'not-found' && (
           <EmptyState
             icon={<SearchX size={34} />}
-            title="Esta propiedad no está disponible"
-            text="El link puede estar incompleto o la publicación ya no existe."
+            title="No encontramos esta ficha."
+            text="El enlace puede estar incompleto o la publicación ya no estar disponible."
           />
         )}
 
         {status === 'unpublished' && (
           <EmptyState
             icon={<EyeOff size={34} />}
-            title="Esta publicación no está activa"
-            text="El anunciante pausó esta publicación. Si te compartieron el link, pregúntale si sigue disponible."
+            title="Esta ficha no está publicada."
+            text="El anunciante la retiró o todavía no termina de prepararla."
           />
         )}
 
         {status === 'expired' && (
           <EmptyState
             icon={<Clock size={34} />}
-            title="Esta publicación venció"
-            text="Las publicaciones se eliminan automáticamente después de 30 días. Pide al anunciante que genere un link nuevo si la propiedad sigue disponible."
+            title="Esta ficha ya no está vigente."
+            text="El enlace venció. Si te interesa el inmueble, pide al anunciante que confirme su disponibilidad."
           />
         )}
 
         {status === 'error' && (
           <EmptyState
             icon={<RefreshCw size={34} />}
-            title="No pudimos cargar la propiedad"
+            title="No pudimos cargar la ficha."
             text={errorMessage}
             action={
               <button type="button" className="primary-button" onClick={loadProperty}>
