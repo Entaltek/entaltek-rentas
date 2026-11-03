@@ -150,8 +150,9 @@ export function EditorPage() {
       <main className="editor-page">
         <section className="editor-heading">
           <div className="editor-heading-main">
-            <p className="eyebrow">Editor de propiedad</p>
-            <h1>{property.title.trim() || 'Nueva propiedad'}</h1>
+            <p className="eyebrow">Editor de ficha</p>
+            <h1>Crea tu ficha.</h1>
+            <p className="editor-property-name">{property.title.trim() || 'Nueva propiedad'}</p>
             <div className="editor-status-row">
               <StatusPill status={property.status} saveStatus={saveStatus} />
             </div>
@@ -191,8 +192,8 @@ export function EditorPage() {
         {publicUrl && (
           <div className="public-link-banner">
             <p>
-              <Globe size={17} /> Tu propiedad está publicada: <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
-              <small>Guarda este link para compartirlo. Si necesitas editar después, puedes generar una nueva versión o ponerte en contacto con nosotros.</small>
+              <Globe size={17} /> Tu ficha está publicada: <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
+              <small>Guarda este enlace para compartirlo. Verifica que toda la información siga vigente.</small>
             </p>
             <button type="button" className="secondary-button" onClick={copyPublicLink}>
               <Link2 size={16} /> Copiar link
@@ -334,11 +335,10 @@ function PublishFormFooter({
   return (
     <section className="form-publish-card is-ready" aria-label="Publicar propiedad">
       <div>
-        <p className="eyebrow">Resumen de tu publicación de propiedad</p>
-        <h2>{isPublished ? 'Tu link ya está activo' : 'Ya puedes publicar tu propiedad'}</h2>
+        <p className="eyebrow">Resumen de tu ficha</p>
+        <h2>{isPublished ? 'Tu enlace ya está activo' : 'Ya puedes publicar tu ficha'}</h2>
         <p>
-          Revisa que tus datos sean correctos. Al publicar, guarda el link para compartirlo con interesados.
-          Si después necesitas cambios, puedes generar una nueva publicación o ponerte en contacto con nosotros.
+          Revisa que los datos y las fotografías sean correctos. Al publicar, guarda el enlace para compartirlo con personas interesadas.
         </p>
       </div>
       <div className="form-publish-actions">

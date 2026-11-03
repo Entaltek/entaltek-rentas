@@ -54,6 +54,7 @@ const NEARBY_ICONS: Record<NearbyPlaceType, typeof Store> = {
 
 export function PropertyLanding({ property, variant = 'public', sectionId }: Props) {
   const isPreview = variant === 'preview';
+  const TitleTag = isPreview ? 'h2' : 'h1';
   const photos = sortPhotos(property.photos);
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
 
@@ -103,6 +104,17 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
 
   return (
     <article className={`property-card ${isPreview ? 'is-preview' : ''}`} id={sectionId}>
+      <div className="property-title-card">
+        <p className="eyebrow">
+          {PROPERTY_TYPE_LABELS[property.propertyType]} · {OPERATION_TYPE_LABELS[property.operationType]}
+        </p>
+        <TitleTag>{property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}</TitleTag>
+        {(locationShort || isPreview) && (
+          <p className="location">
+            <MapPin size={18} /> {locationShort || 'Colonia, ciudad y estado'}
+          </p>
+        )}
+      </div>
       {(photos.length > 0 || isPreview) && (
         <section className={`hero-grid ${photos.length ? '' : 'empty-gallery'} ${visibleSecondaryPhotos.length ? '' : 'single-photo'} ${showPhotoReel ? 'has-reel' : ''}`}>
           {activePhoto ? (
@@ -165,22 +177,12 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
 
       <section className="property-content">
         <div className="property-main">
-          <div className="property-title-card">
-            <p className="eyebrow">
-              {PROPERTY_TYPE_LABELS[property.propertyType]} · {OPERATION_TYPE_LABELS[property.operationType]}
-            </p>
-            <h1>{property.title || (isPreview ? 'Título de tu propiedad' : 'Propiedad')}</h1>
-            {(locationShort || isPreview) && (
-              <p className="location">
-                <MapPin size={18} /> {locationShort || 'Colonia, ciudad y estado'}
-              </p>
-            )}
-            {(property.description || isPreview) && (
-              <p className="description">
-                {property.description || 'La descripción de tu propiedad aparecerá aquí: estado del inmueble, beneficios y para quién es ideal.'}
-              </p>
-            )}
-          </div>
+          {(property.description || isPreview) && (
+            <div className="landing-introduction">
+              <h2>Sobre este espacio</h2>
+              <p className="description">{property.description || 'La descripción de tu propiedad aparecerá aquí: estado del inmueble, beneficios y detalles prácticos.'}</p>
+            </div>
+          )}
 
           {features.length > 0 && (
             <section className="landing-block landing-block-compact">
@@ -242,18 +244,18 @@ export function PropertyLanding({ property, variant = 'public', sectionId }: Pro
                 {conditions.map((item) => <li key={item}>{item}</li>)}
               </ul>
             )}
-            {whatsappReady ? (
+            {whatsappReady && !isPreview ? (
               <a href={whatsappUrl} target="_blank" rel="noreferrer" className="primary-button whatsapp-button">
                 <MessageCircle size={18} /> Contactar por WhatsApp
               </a>
             ) : (
-              isPreview && <p className="contact-missing">Agrega un WhatsApp de contacto para activar el botón.</p>
+              isPreview && (whatsappReady
+                ? <button type="button" className="primary-button whatsapp-button" disabled><MessageCircle size={18} /> Vista previa de WhatsApp</button>
+                : <p className="contact-missing">Agrega un WhatsApp de contacto para activar el botón.</p>)
             )}
             {property.contact.name && <p className="contact-name">Te atiende: {property.contact.name}</p>}
             <small>Información proporcionada por el anunciante. Verifica la propiedad antes de realizar cualquier pago.</small>
-            <small className="expiry-note">
-              Esta publicación se elimina automáticamente después de 30 días{expirationLabel ? ` (vence el ${expirationLabel})` : ''}.
-            </small>
+            {expirationLabel && <small className="expiry-note">Vigencia estimada de este enlace: hasta el {expirationLabel}.</small>}
           </div>
 
           <div className="side-details-grid">
