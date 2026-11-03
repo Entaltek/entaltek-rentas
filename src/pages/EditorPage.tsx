@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
+  ImageIcon,
   Globe,
   Link2,
   Loader2,
@@ -19,7 +20,8 @@ import { MarketplaceCopy } from '../components/MarketplaceCopy';
 import { PropertyForm } from '../components/PropertyForm';
 import { PropertyLanding } from '../components/PropertyLanding';
 import { ToastStack, useToasts } from '../components/Toast';
-import { hasValidWhatsapp } from '../lib/format';
+import { formatPrice, hasValidWhatsapp } from '../lib/format';
+import { sortPhotos } from '../lib/photos';
 import { clearPropertyDraft, loadPropertyDraft, savePropertyDraft } from '../lib/propertyDraft';
 import { validateForPublish } from '../lib/validation';
 import { publishProperty, saveProperty, unpublishProperty } from '../services/propertyService';
@@ -247,7 +249,14 @@ export function EditorPage() {
               </div>
             </div>
             <div className="preview-frame">
-              <PropertyLanding property={property} variant="preview" />
+              <div className="umbral-editor-preview">
+                <p className="umbral-eyebrow">{property.propertyType === 'departamento' ? 'Departamento' : 'Propiedad'} · {property.operationType === 'renta' ? 'Renta' : 'Venta'}</p>
+                <h2>{property.title.trim() || 'Título de tu propiedad'}</h2>
+                <p className="umbral-editor-preview-place">{[property.location.neighborhood, property.location.city, property.location.state].filter(Boolean).join(', ') || 'Colonia, ciudad y estado'}</p>
+                {sortPhotos(property.photos)[0] ? <img className="umbral-editor-preview-photo" src={sortPhotos(property.photos)[0].url} alt={sortPhotos(property.photos)[0].alt || 'Foto de la propiedad'} /> : <div className="umbral-editor-preview-empty"><ImageIcon size={34} aria-hidden="true" /><strong>Aquí aparecerán tus fotos</strong><span>Cuando las añadas en el paso 5, verás la primera en este espacio.</span></div>}
+                <div className="umbral-editor-preview-facts"><div>Precio<strong>{property.price > 0 ? formatPrice(property) : '$ —'}</strong></div><div>Superficie<strong>{property.areaM2 ? `${property.areaM2} m²` : '— m²'}</strong></div><div>Recámaras<strong>{property.bedrooms || '—'}</strong></div><div>Baños<strong>{property.bathrooms || '—'}</strong></div></div>
+                <p className="umbral-editor-preview-note">La ficha completa incluye descripción, zona, condiciones y contacto.</p>
+              </div>
             </div>
           </aside>
         </div>
